@@ -114,28 +114,28 @@ save.image("ex1_jointEDP_tdf3.RData")
 ### Results
 
 # Marginal posterior on the number clusters
-config=output$config
-k=rep(0,S)
+config_x=output$config_x
+config_y=output$config_y
+k_y=rep(0,S)
+k_x=list()
 for(s in 1:S){
-  k[s]=length(unique(config[s,]))
+  k_y[s]=length(unique(config_y[s,]))
+  k_x[[s]]=rep(0,k_y[s])
+  for(i in 1:k_y[s]){
+    k_x[[s]][i]=length(unique(config_x[s,config_y[s,]==i]))
+  }
 }
 ggplot()+
-  geom_bar(aes(k)) +
+  geom_bar(aes(k_y)) +
   theme_bw()
 
-# Posterior similarity matrix
-psm=comp.psm(config)
+# Posterior similarity matrix for y-clustering
+psm=comp.psm(config_y)
 plotpsm(psm)
 
-# Clustering estimate
-output_vi=minVI(psm,config)
-png("ex1_jdp_clus1_terrors.png",width = 500, height = 450)
-ggplot() +
-  geom_point(aes(x = x[,1], y = x[,2], color = as.factor(output_vi$cl))) +
-  theme_bw() +
-  labs( x = "x_1", y = "x_2", color = "Cluster")
-dev.off()
-png("ex1_jdp_clus2_terrors.png",width = 500, height = 450)
+# y-Clustering estimate
+output_vi=minVI(psm,config_y)
+png("ex1_jedp_clus_terrors.png",width = 500, height = 450)
 ggplot() +
   geom_point(aes(x = x[,1], y = y, color = as.factor(output_vi$cl))) +
   theme_bw() +
@@ -145,24 +145,22 @@ dev.off()
 
 ### PREDICTION
 #Compute prediction and predictive density estimates with no credible intervals
-source(".././joint/predict_jdp.R")
-output_pred=predict_jdp(S,n_new,m2,p,x_new, y_grid, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, k, config, output$alpha, output$phi_y, output$sigma_y, output$mu_x, output$sigma_x )
+source(".././joint/predict_edp.R")
+output_pred=predict_edp(S,n_new,m2,p,x_new, y_grid, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, k_y, k_x, config_y, config_x, output$alpha_x, output$alpha_y, output$phi_y, output$sigma_y, output$mu_x, output$sigma_x ) 
 
 #Compute prediction with credible intervals
-source(".././joint/predict_cred_jdp.R")
-output_cred_pred=predict_cred_jdp(.05,S,n_new,p,x_new, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, k, output$config, output$alpha, output$phi_y, output$sigma_y, output$mu_x, output$sigma_x )
+source(".././joint/predict_cred_edp.R")
+output_cred_pred=predict_cred_edp(.05,S,n_new,p,x_new, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, k_y, k_x, config_y, config_x, output$alpha_x, output$alpha_y, output$phi_y, output$sigma_y, output$mu_x, output$sigma_x ) 
 
 #Compute predictive density with credible bounds
-source(".././joint/predict_fcred_jdp.R")
-xs = sort(x_new[,1], index.return=TRUE)
-inds = xs$ix[c(seq(1,n_new,n_new/5),n_new)]
-output_fcred_pred=predict_fcred_jdp(.05, S,length(inds),m2,p,x_new[inds,], y_grid, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, k, config, output$alpha, output$phi_y, output$sigma_y, output$mu_x, output$sigma_x )
+source(".././joint/predict_fcred_edp.R")
+output_fcred_pred=predict_fcred_edp(.05, S,length(inds),m2,p,x_new[inds,], y_grid, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, k_y, k_x, config_y, config_x, output$alpha_x, output$alpha_y, output$phi_y, output$sigma_y, output$mu_x, output$sigma_x ) 
 
-save.image("ex1_jointDP_tdf3.RData")
+save.image("ex1_jointEDP_tdf3.RData")
 
 ###Plot Prediction
 #with credible intervals but without data
-png("ex1_jdp_pred_terrors.png",width = 500, height = 450)
+png("ex1_jedp_pred_terrors.png",width = 500, height = 450)
 ggplot() +
   geom_line(aes(x = x_new[,1], y = output_cred_pred$y_pred), col = "black") +
   geom_line(aes(x = x_new[,1], y = m_true_new), col = "red") +
@@ -199,7 +197,7 @@ ggplot() +
   labs( x = "y", y = "Density")
 
 #PLot density for a few observations
-png("ex1_jdp_fpred_terrors.png",width = 500, height = 450)
+png("ex1_jedp_fpred_terrors.png",width = 500, height = 450)
 cols = rainbow(6)
 ggplot() +
   geom_line(aes(x = y_grid, y = output_fcred_pred$f_pred[,1]), col = cols[1]) +
