@@ -6,6 +6,8 @@ library(tidyverse)
 library(mvtnorm) 
 library(msm)
 
+setwd("/Users/swade/Documents/GitHub/BayesXMix/data_simulation/ex1a")
+
 ##############################################
 ## Example 1: Drawback of Joint
 ##############################################

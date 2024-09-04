@@ -8,12 +8,14 @@ library(msm)
 library(MCMCpack)
 library(mcclust.ext)
 
+setwd("/Users/swade/Documents/GitHub/BayesXMix/Joint/ex1a")
+
 ##############################################
 ## Example 1: t-errors
 ##############################################
 
 # Load data
-load("data_ex1_tdf3.RData")
+load("../.././data_simulation/ex1a/data_ex1_tdf3.RData")
 
 #############
 #### Joint DP
@@ -201,7 +203,7 @@ ggplot() +
   geom_ribbon(aes(x=y_grid, ymin=output_fcred_pred$l_fpred[,5], ymax=output_fcred_pred$u_fpred[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
   labs( x = "y", y = "Density")+
-  ylim(0,4.5) 
+  ylim(0,4.9) 
 dev.off()
 
 #empirical l2 prediction error

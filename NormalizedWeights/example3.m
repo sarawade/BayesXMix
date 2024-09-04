@@ -1,6 +1,6 @@
 %% EXAMPLE %%
-% Demonstrating how to use the NPRegNW.m function for implementing the
-% Nonparametric regression model with normalized weights.
+% Example 3 from Wade and Inacio (2024): demonstrating the drawbacks of the
+% conditional approach with dependent weights
 
 % Clear workspace %
 % Comment this line if clearing is not wanted
@@ -9,15 +9,13 @@ clear
 % Set random number generator seed for data simulation %
 % Comment this lines if seed should not be fixed
 seed=32455;
-%rng(seed);
-s = RandStream('mcg16807','Seed',seed);
-RandStream.setDefaultStream(s)
+rng(seed);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Load Data %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-M=csvread('ex3train_v2.csv',1,1);
+M=csvread('ex3/ex3train.csv',1,1);
 Y=M(:,1);
 x=M(:,2:3);
 % True regression function
@@ -33,7 +31,7 @@ p=2;
 
 
 % Define new covariate values
-M=csvread('ex3test_v2.csv',1,1);
+M=csvread('ex3/ex3test.csv',1,1);
 x_new=M(:,1:2);
 n_new=size(x_new,1);
 % For simulated data, we can calculate the true predictive mean for
@@ -118,47 +116,6 @@ PP{2}=[1,1];
 % PP{2}=[.5,.5];
 % massa=1;
 
-%% Initial state
-% Default starts each with one mixture component for each observation,
-% with covariate parameters sampled from the prior and empty latent
-% variables
-
-% Indices
-%da=(1:n); % n components with observation i associated to component i
-da=ones(1,n); % only one component with every observation associated to it
-
-% Latent model variables
-ka=zeros(n,1); % No latent variables
-Da=cell(n,1); % Empty array (because ka_i is zero for all i) of adequate size
-
-% Parameters for discrete covariates
-rhoa=cell(q,1);
-% Initalized at the prior mean
-for h=1:q
-    %rhoa{h}=kron(ones(1,n),gamma{h}/sum(gamma{h})); % n components
-    rhoa{h}=gamma{h}/sum(gamma{h}); % 1 component
-end
-
-% Parameters for continuous covariates
-%mua=x(:,q+1:end)'; % n components with means set at data points
-mua=sum(x(:,q+1:end))'/n; % one component with mean set at sample mean
-taua=a1./a2; % precision set at prior mean
-
-% Generate data structure for NPRegNW function and clear auxiliary
-% variables
-initialState=cell(6,1);
-initialState{1}=da;
-initialState{2}=ka;
-initialState{3}=Da;
-initialState{4}=rhoa;
-initialState{5}=mua;
-initialState{6}=taua;
-if strcmp(PP{1},'DirichletHP')
-    initialState{7}=massa;
-    clear massa
-end
-clear h da ka Da rhoa mua taua G h beta0 iC alpha1 alpha2 gamma mu0 c a1 a2
-
 %% Initial state: randomized alternative
 % Default starts each with one mixture component for each observation,
 % with covariate parameters sampled from the prior and empty latent
@@ -207,7 +164,6 @@ clear h da ka Da rhoa mua taua G h beta0 iC alpha1 alpha2 gamma mu0 c a1 a2
 
 %Example
 [w,theta,J,d,cputime,lastState,PP,phi,initialState]=NPRegNW(Y,x,q,p,mcmc,Hyperparameters,'Initial',initialState);
-% [w,theta,J,d,cputime,lastState,PP,phi,initialState]=NPRegNW(Y,x,q,p,mcmc,Hyperparameters,'Initial',initialState, 'Prior',PP);
 
 % To continue MCMC iterations, set initialState=lastState
 % mcmc=[3000,1,5000];
@@ -221,10 +177,7 @@ clear h da ka Da rhoa mua taua G h beta0 iC alpha1 alpha2 gamma mu0 c a1 a2
 S=mcmc(3);
 
 %% Inference for prediction (mean functional)
-% % Define new covariates
-% x_new=[(-6:.1:6)';(-6:.1:6)'];
-% n_new=size(x_new,1);
-% x_new=[[zeros(n_new/2,1);ones(n_new/2,1)],x_new];
+
 % Probability for pointwise credible intervals
 % Optional argument, use only if intervals are required 
 cred_prob=0.95;
@@ -233,125 +186,33 @@ cred_prob=0.95;
 % If no credible intervals are needed, use
 % [Y_pred]=NPRegNWprediction(x_new,q,p,w,theta,J);
 
-%For the data
-%[Y_mean,Y_mean_mat,Y_mean_CI]=NPRegNWprediction(x,q,p,w,theta,J,cred_prob);
-%Y_mean_true=5./(1+exp(-x));
-
-% Mean square error
-%MSE=sum(((Y_mean-Y).^2))/n;
-
 % Compute L2 prediction error
-% l2_err=sqrt(sum((Y_pred_true-(sum(Y_pred,1)/mcmc(1))').^2)/n_new);
 l2_err_pred=sqrt(sum((m_pred_true-Y_pred).^2)/n_new);
-%l2_err_pred_median=sqrt(sum((Y_pred_true-Y_pred_CI(:,3)).^2)/n_new);
-% Compute L1 prediction error
-% l1_err=sum(abs(Y_pred_true-(sum(Y_pred,1)/mcmc(1))'))/n_new;
-%l1_err_pred=sum(abs(Y_pred_true-Y_pred))/n_new;
-%l1_err_pred_median=sum(abs(Y_pred_true-Y_pred_CI(:,3)))/n_new;
-% For the data
-%l2_err_mean=sqrt(sum((Y_mean_true-Y_mean).^2)/n);
-%l2_err_mean_median=sqrt(sum((Y_mean_true-Y_mean_CI(:,3)).^2)/n);
-%l1_err_mean=sum(abs(Y_mean_true-Y_mean))/n;
-%l1_err_mean_median=sum(abs(Y_mean_true-Y_mean_CI(:,3)))/n;
-
-
-% Smoothed histograms representing estimated posterior density for the
-% regression mean
-%Y_pred_hist=zeros(100,n_new);
-%Y_mat=zeros(100,n_new);
-%for i=1:n_new
-%    [Y_pred_hist(:,i),Y_mat(:,i)]=ksdensity(Y_pred_mat(:,i));
-%end
 
 ec_pred = sum((m_pred_true>=Y_pred_CI(:,1)) & (m_pred_true<=Y_pred_CI(:,2)))/n_new;
 
 ci_length = mean(Y_pred_CI(:,2)-Y_pred_CI(:,1));
     
 %% Predictive density estimates
-%[Y_fpred]=NPRegNWfprediction(Y_grid,x_new,1,1,w,theta,J);
-[Y_fpred,l_fpred,u_fpred]=NPRegNWfprediction(Y_grid,x_new,q,p,w,theta,J,0.95);
-%For the data
-%[Y_f,l_f,u_f]=NPRegNWfprediction(Y_grid,x,q,p,w,theta,J,0.95);
 
-% % For simulated data, we can calculate the true predictive density for
-% % comparison with estimates
-%Y_fpred_true=normpdf(repmat(Y_grid',n_new,1),repmat((5./(1+exp(-x_new))),1,length(Y_grid)),repmat((.25+exp((x_new-6)/3)),1,length(Y_grid)));
-% For the data
-%Y_f_true=normpdf(repmat(Y_grid',n,1),repmat((5./(1+exp(-x))),1,length(Y_grid)),repmat((.25+exp((x-6)/3)),1,length(Y_grid)));
+[Y_fpred,l_fpred,u_fpred]=NPRegNWfprediction(Y_grid,x_new,q,p,w,theta,J,0.95);
 
 % Compute L_1 error between true and estimated (mean posterior) 
 % conditional density for each new covariate value 
 L1_f_pred=sum(abs(Y_fpred_true-Y_fpred),2)*(Y_grid(2)-Y_grid(1));
-% Integrating with respect to the sampling distribution of the covariates
-%avgL1_f_pred=normpdf(x_new',0,2.5)*L1_f_pred*(x_new(2)-x_new(1));
 % Simple average
 savgL1_f_pred=mean(L1_f_pred);
-% Maximizing over the covariates
-%maxL1_f_pred=max(L1_f_pred);
-% For the data
-%L1_f=sum(abs(Y_f_true-Y_f),2)*(x_new(2)-x_new(1));
-% Integrating with respect to the sampling distribution of the covariates
-%avgL1_f=mean(L1_f);
-% Maximizing over the covariates
-%maxL1_f=max(L1_f);
-
-% %Compute 95% CI based on density estimates
-% Y_pred_fCI=zeros(n_new,2);
-% Y_Fpred=cumsum(Y_fpred,2)*(Y_grid(2)-Y_grid(1));
-% for i=1:n_new
-%     aux=1;
-%     Y_Fpred(i,:)=Y_Fpred(i,:)+(1-Y_Fpred(i,ny))/2;
-%     while(Y_Fpred(i,aux)<.025)
-%         aux=aux+1;
-%     end
-%     if aux==1
-%         i
-%         Y_pred_fCI(i,1)=Y_grid(aux);
-%     else
-%         Y_pred_fCI(i,1)=(Y_grid(aux)-Y_grid(aux-1))*(0.025-Y_Fpred(i,aux-1))/(Y_Fpred(i,aux)-Y_Fpred(i,aux-1))+Y_grid(aux-1);
-%     end
-%     aux=ny;
-%     while(Y_Fpred(i,aux)>.975)
-%         aux=aux-1;
-%     end
-%     if aux==ny
-%         i
-%         Y_pred_fCI(i,2)=Y_grid(aux); 
-%     else
-%         Y_pred_fCI(i,2)=(Y_grid(aux+1)-Y_grid(aux))*(0.975-Y_Fpred(i,aux))/(Y_Fpred(i,aux+1)-Y_Fpred(i,aux))+Y_grid(aux);
-%     end
-% end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% %% Model fitness via realized discrepancies %%
-% % For all observations
-% [Discrepancy_Y,Y_rep,Discrepancy_Y_rep,estimated_p]=NPReg_RDPredFitness(Y,x,q,p,w,theta,J);
-% 
-% % For "central" observations (covariate values in [-6,6] only
-% x_c=x(x>-6);
-% Y_c=Y(x>-6);
-% Y_c=Y_c(x_c<6);
-% x_c=x_c(x_c<6);
-% [Discrepancy_Y_c,Y_rep_c,Discrepancy_Y_rep_c,estimated_p_c]=NPReg_RDPredFitness(Y_c,x_c,q,p,w,theta,J);
-% 
-% % For new data points in the complete data range
-% xx=(-8:.1:10)';
-% nn=size(xx,1);
-% YY=5./(1+exp(-xx))+randn(nn,1).*(.25+exp((xx-6)/3));
-% [Discrepancy_YY,YY_rep,Discrepancy_YY_rep,estimated_pp]=NPReg_RDPredFitness(Y_c,x_c,q,p,w,theta,J);
-
 
 %% SAVE WORKSPACE %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%mcmc=[2000,1,2000];
-save 'example3_nwreg_v2'
 
-csvwrite('ex3_pred_nwreg_v2.csv',[Y_pred,Y_pred_CI(:,1:2)]);
-csvwrite('ex3_fpred_nwreg_v2.csv',Y_fpred);
-csvwrite('ex3_config_nwreg_v2.csv',d);
-csvwrite('ex3_lfpred_nwreg_v2.csv',l_fpred);
-csvwrite('ex3_ufpred_nwreg_v2.csv',u_fpred);
+save 'ex3/example3_nwreg_v2'
+
+csvwrite('ex3/ex3_pred_nwreg_v2.csv',[Y_pred,Y_pred_CI(:,1:2)]);
+csvwrite('ex3/ex3_fpred_nwreg_v2.csv',Y_fpred);
+csvwrite('ex3/ex3_config_nwreg_v2.csv',d);
+csvwrite('ex3/ex3_lfpred_nwreg_v2.csv',l_fpred);
+csvwrite('ex3/ex3_ufpred_nwreg_v2.csv',u_fpred);
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PLOTS %%
