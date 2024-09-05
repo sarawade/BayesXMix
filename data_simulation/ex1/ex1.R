@@ -51,7 +51,7 @@ x_new[,2] = (x_new[,1]-3.5)^2/3-1+rnorm(n_new,0,0.05)
 m_true_new = 5-log(x_new[,1]+2)
 
 # True density
-y_grid=seq(2.3,5.4,.02)
+y_grid=seq(2.3,5.3,.02)
 m2=length(y_grid)
 f_true_new =dnorm(matrix(y_grid,nrow=m2,ncol=n_new),t(matrix(m_true_new,nrow=n_new,ncol=m2)), 0.05)
 
