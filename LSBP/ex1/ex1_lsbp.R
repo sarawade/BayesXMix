@@ -165,4 +165,29 @@ ggplot() +
   xlim(2.4,4.2)
 dev.off()
 
+#empirical l2 prediction error
+l2_err=sum(((m_true_new-ypred_lsbp)^2)/n_new)^.5
 
+l1_err=sum((abs(m_true_new-ypred_lsbp))/n_new)
+
+#estimated l1 distance for density
+#.02 is grid with, CHANGE if grid with changes
+l1_dist=colSums(abs(f_true_new-est_Gibbs_all))*(y_grid[2]-y_grid[1])
+
+#Average l1 distance
+mean(l1_dist)
+
+#Max l1 dist
+max(l1_dist)
+
+#Min l1 dist
+min(l1_dist)
+
+# empirical coverage for prediction
+ec_pred = sum((m_true_new>=lpred_lsbp)&(m_true_new<=upred_lsbp))/n_new
+
+# credible interval length for prediction
+ci_length = upred_lsbp - lpred_lsbp
+mean(ci_length)
+min(ci_length)
+max(ci_length)
