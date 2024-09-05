@@ -10,14 +10,14 @@ library(MCMCpack)
 library(LSBP)
 library(splines)
 
-setwd("/Users/swade/Documents/GitHub/BayesXMix/LSBP/ex1")
+setwd("/Users/swade/Documents/GitHub/BayesXMix/LSBP/ex1a")
 
 ##############################################
-## Example 1: normal errors
+## Example 1: t-errors
 ##############################################
 
 # Load data
-load("../.././data_simulation/ex1/data_ex1.RData")
+load("../.././data_simulation/ex1a/data_ex1_tdf3.RData")
 ex1data  <- data.frame(x1 = x[,1],x2 = x[,2],y = y)
 
 # MCMC parameters (iterations, burnin, truncation level)
@@ -46,7 +46,7 @@ set.seed(10) # The seed is setted so that the Gibbs sampler is reproducible.
 fit_Gibbs   <- LSBP_Gibbs(model_formula, data=ex1data, H=H, prior=prior, 
                           control=control_Gibbs(R=R,burn_in=burn_in,method_init="cluster"), verbose=TRUE)
 
-save.image("ex1_lsbpns.RData")
+save.image("ex1a_lsbpns.RData")
 
 ######## Results
 
@@ -103,12 +103,12 @@ X2  <- cbind(1,ns(x_new[inds,1],knots=attr(Basis1,"knots"),Boundary.knots=attr(B
 
 
 # Conditional density - Gibbs sampling
-est_Gibbs <- matrix(0,length(y_grid),8)
-lower_Gibbs <- matrix(0,length(y_grid),8)
-upper_Gibbs <- matrix(0,length(y_grid),8)
+est_Gibbs <- matrix(0,length(y_grid),length(inds))
+lower_Gibbs <- matrix(0,length(y_grid),length(inds))
+upper_Gibbs <- matrix(0,length(y_grid),length(inds))
 
 for(i in 1:length(y_grid)){  # Cycle over the y grid
-  pred_Gibbs_i = matrix(0, R, 8) 
+  pred_Gibbs_i = matrix(0, R,length(inds)) 
   for(r in 1:R){      # Cycle over the iterations of the MCMC chain
     pred_Gibbs_i[r,] <- c(LSBP_density(y_grid[i],X1,X2,
                                        fit_Gibbs$param$beta_mixing[r,,],
@@ -120,11 +120,11 @@ for(i in 1:length(y_grid)){  # Cycle over the y grid
   upper_Gibbs[i,]    <- apply(pred_Gibbs_i,2,function(x) quantile(x,0.975))
 }
 
-save.image("ex1_lsbpns.RData")
+save.image("ex1a_lsbpns.RData")
 
 ### Plot Prediction
 #with credible intervals but without data
-png("ex1_lsbpns_pred.png",width = 500, height = 450)
+png("ex1a_lsbpns_pred.png",width = 500, height = 450)
 ggplot() +
   geom_line(aes(x = x_new[,1], y = ypred_lsbp), col = "black") +
   geom_line(aes(x = x_new[,1], y = m_true_new), col = "red") +
@@ -161,7 +161,7 @@ ggplot() +
   labs( x = "y", y = "Density")
 
 #PLot density for a few observations
-png("ex1_lsbpns_fpred.png",width = 500, height = 450)
+png("ex1a_lsbpns_fpred.png",width = 500, height = 450)
 cols = rainbow(6)
 ggplot() +
   geom_line(aes(x = y_grid, y = est_Gibbs[,1]), col = cols[1]) +
@@ -175,8 +175,7 @@ ggplot() +
   geom_ribbon(aes(x=y_grid, ymin=lower_Gibbs[,5], ymax=upper_Gibbs[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
   labs( x = "y", y = "Density")+
-  ylim(0,9.8) +
-  xlim(2.4,4.2)
+  ylim(0,4.9)
 dev.off()
 
 #empirical l2 prediction error

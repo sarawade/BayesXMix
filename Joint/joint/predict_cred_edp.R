@@ -35,15 +35,15 @@ marg_x=exp(rowSums(dt(x_sc,2*t(matrix(a_x,nrow=p,ncol=m)),log=TRUE)+t(matrix(.5*
 
 #Initialize
 #first element is for new subject
-weight_mat=matrix(0,m, sum(k_y)+1)
-weight_mat[,1]=sum(alpha_y)*marg_x
-y_pred_mat=matrix(0,m, sum(k_y)+1)
-y_pred_mat[,1]=X_new%*%mu_theta
+nweight_mat=matrix(0,m, S)
+
+y_pred_mat=matrix(0,m, S)
+
 
 for(s in 1:S){
 
 	#calculate weight matrix
-	weight_mat_s=matrix(0,m,k_y[s])
+	weight_mat_s=matrix(0,m,k_y[s]+1)
 
 	for(j in 1:k_y[s]){
 		nj_s=sum(config_y[s,]==j)
@@ -54,15 +54,13 @@ for(s in 1:S){
 			weight_mat_s[,j]=weight_mat_s[,j]+nj_s*pred_x_new_jhs*njh_s/(alpha_x[[s]][j]+nj_s)
 		}
 	}
+	weight_mat_s[,k_y[s]+1]=alpha_y[s]*marg_x
 
 	#calculate prediction
-	y_pred_s=X_new%*%phi_y[[s]]
-	st=2
-	if(s!=1){
-		st=st+sum(k_y[1:(s-1)])
-	}
-	y_pred_mat[,st:(sum(k_y[1:s])+1)]=y_pred_s
-	weight_mat[,st:(sum(k_y[1:s])+1)]=weight_mat_s
+	y_pred_s=X_new%*%cbind(phi_y[[s]],mu_theta)
+
+	nweight_mat[,s]= rowSums(weight_mat_s)
+	y_pred_mat[,s]= rowSums(y_pred_s*weight_mat_s)/nweight_mat[,s]
 	
 	if(((s/S*100)%%1)==0){
 		print(paste(s/S*100,"% completed"))
@@ -70,14 +68,14 @@ for(s in 1:S){
 }
 
 ###Prediction
-y_pred=rowSums(y_pred_mat*weight_mat)/rowSums(weight_mat)
+y_pred=rowSums(y_pred_mat*nweight_mat)/rowSums(nweight_mat)
 
 #calculate upper and lower 95% credible bounds for y_pred
 u_pred=matrix(0,m,1)
 l_pred=matrix(0,m,1)
 for(i in 1:m){
 	pred_i_sort=sort(y_pred_mat[i,], index.return=T)
-	cweight_i_sort=cumsum(weight_mat[i,pred_i_sort$ix])/sum(weight_mat[i,])
+	cweight_i_sort=cumsum(nweight_mat[i,pred_i_sort$ix])/sum(nweight_mat[i,])
 	ind_l=sum(cweight_i_sort<a/2)
 	l_pred[i]=(pred_i_sort$x[ind_l]*(a/2-cweight_i_sort[ind_l])+pred_i_sort$x[ind_l+1]*(cweight_i_sort[ind_l+1]-a/2))/(cweight_i_sort[ind_l+1]-cweight_i_sort[ind_l])
 	ind_u=sum(cweight_i_sort<(1-a/2))

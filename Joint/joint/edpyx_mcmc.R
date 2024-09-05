@@ -301,166 +301,166 @@ for(s in 1:(S+burnin-1)){
 		}
 	}
 
-	#Propose x-cluster switching
-	##Case 1
-	if(dn_y>1 & sum(dn_x>1)>0){
-		# Choose x cluster among x-clusters in y-clusters with more than 1 x-clusters
-		kb1=sum(dn_x[dn_x>1])
-		u=runif(1)*kb1
-		lj=1
-		while(u>lj){lj=lj+1}
-		j=sum(lj>cumsum(dn_x*(dn_x>1)))+1
-		l=lj-c(0,cumsum(dn_x*(dn_x>1)))[j]
-		#Choose y cluster other than j
-		u=runif(1)*(dn_y-1)
-		h=1
-		while(u>h){h=h+1}
-		h=h+(h>=j)
-		#Calculate acceptance prob
-		nj=sum(config_y_s==j)
-		nh=sum(config_y_s==h)
-		njl=sum(config_x_s[config_y_s==j]==l)
-		laccep=lgamma(nj-njl)-lgamma(nj)+lgamma(nh+njl)-lgamma(nh)+lgamma(alpha_x_s[j]+nj)-lgamma(alpha_x_s[j]+nj-njl)+lgamma(alpha_x_s[h]+nh)-lgamma(alpha_x_s[h]+nh+njl)+log(alpha_x_s[h])-log(alpha_x_s[j])
-		yjl=matrix(matrix(y[config_y_s==j], nrow=nj)[config_x_s[config_y_s==j]==l,], nrow=njl)
-		Xjl=matrix(matrix(X[config_y_s==j,], nrow=nj)[config_x_s[config_y_s==j]==l,], nrow=njl)
-		laccep=laccep+sum(dnorm(yjl,Xjl%*%phi_s[,h], sigma_y_s[h]^.5,log=T))-sum(dnorm(yjl,Xjl%*%phi_s[,j], sigma_y_s[j]^.5,log=T))
-		laccep=laccep+log(kb1)-log(kb1-(dn_x[j]==2)+(dn_x[h]==1))
-		accep=min(1,exp(laccep))
-		if(runif(1)<accep){
-			print("Switch 1 accepted")
-			#Switch labels
-			indjl=(config_y_s==j&config_x_s==l)
-			config_y_s[indjl]=h
-			config_x_s[indjl]=dn_x[h]+1
-			if(dn_x[j]>l){config_x_s[(config_y_s==j&config_x_s>l)]=config_x_s[(config_y_s==j&config_x_s>l)]-1}
-			#Update x parameters
-			mu_x_s[[h]]=cbind(mu_x_s[[h]],mu_x_s[[j]][,l])
-			sigma_x_s[[h]]=cbind(sigma_x_s[[h]],sigma_x_s[[j]][,l])
-			mu_x_s[[j]]=matrix(mu_x_s[[j]][,-l],nrow=p)
-			sigma_x_s[[j]]=matrix(sigma_x_s[[j]][,-l],nrow=p)
-			#Update dn_x
-			dn_x[j]=dn_x[j]-1
-			dn_x[h]=dn_x[h]+1
-		}
-	}
-
-	## Case 2 and 3
-	u23=runif(1)
-	ind2=sum(dn_x>1)>0
-	ind3=(sum(dn_x==1)>0)&(dn_y>1)
-	if(u23<(.5^ind3) & ind2){
-		# Choose x cluster among x-clusters in y-clusters with more than 1 x-clusters
-		kb1=sum(dn_x[dn_x>1])
-		u=runif(1)*kb1
-		lj=1
-		while(u>lj){lj=lj+1}
-		j=sum(lj>cumsum(dn_x*(dn_x>1)))+1
-		l=lj-c(0,cumsum(dn_x*(dn_x>1)))[j]
-		#Sample new phi
-		nj=sum(config_y_s==j)
-		njl=sum(config_x_s[config_y_s==j]==l)
-		yjl=matrix(matrix(y[config_y_s==j], nrow=nj)[config_x_s[config_y_s==j]==l,], nrow=njl)
-		Xjl=matrix(matrix(X[config_y_s==j,], nrow=nj)[config_x_s[config_y_s==j]==l,], nrow=njl)
-		C_hat=C+ t(Xjl)%*%Xjl
-		decomp=eigen(C_hat, symmetric=TRUE)
-		iC_hat=decomp$vectors%*%diag(1/decomp$values)%*%t(decomp$vectors)
-		mu_hat=iC_hat%*%(C%*%mu_theta+t(Xjl)%*%yjl)
-		a_y_hat=a_y+njl/2
-		b_y_hat=b_y+(sum(yjl^2)+muCmu-t(mu_hat)%*%C_hat%*%mu_hat)/2
-		sigma_y_new=rinvgamma(1,a_y_hat, b_y_hat)
-		phi_new=rmvnorm(1, mu_hat, sigma_y_new*iC_hat,  method=c("chol"))
-		#Sample new alpha_x
-		alpha_x_new=rgamma(1,u_alpha_x, v_alpha_x)	
-		laccep=log(alpha_y_s)+lgamma(nj-njl)-lgamma(nj)+lgamma(alpha_x_s[j]+nj)-lgamma(alpha_x_s[j]+nj-njl)+lgamma(njl)+lgamma(alpha_x_new)-lgamma(alpha_x_new+njl)+log(alpha_x_new)-log(alpha_x_s[j])
-		sc=diag(njl)-Xjl%*%iC_hat%*%t(Xjl)
-		decomp=eigen(sc, symmetric=TRUE)
-		isc=decomp$vectors%*%diag(1/decomp$values,njl)%*%t(decomp$vectors)
-		yjl_hat=Xjl%*%mu_theta
-		laccep=laccep+dmvt(c(yjl-yjl_hat), sigma=(b_y/a_y*isc), df = 2*a_y, log = TRUE)-sum(dnorm(yjl,Xjl%*%phi_s[,j], sigma_y_s[j]^.5,log=T))
-		laccep=laccep+log(kb1)-log(sum(dn_x==1)+1+(dn_x[j]==2))-log(dn_y)
-		accep=min(1,exp(laccep))
-		if(runif(1)<accep){
-			print("Switch 2 accepted")
-			#Switch labels
-			indjl=(config_y_s==j&config_x_s==l)
-			config_y_s[indjl]=dn_y+1
-			config_x_s[indjl]=1
-			if(dn_x[j]>l){config_x_s[(config_y_s==j&config_x_s>l)]=config_x_s[(config_y_s==j&config_x_s>l)]-1}
-			#Update x parameters
-			mu_x_s[[dn_y+1]]=matrix(mu_x_s[[j]][,l],nrow=p)
-			sigma_x_s[[dn_y+1]]=matrix(sigma_x_s[[j]][,l],nrow=p)
-			mu_x_s[[j]]=matrix(mu_x_s[[j]][,-l],nrow=p)
-			sigma_x_s[[j]]=matrix(sigma_x_s[[j]][,-l],nrow=p)
-			#Update y parameters
-			phi_s=cbind(phi_s,t(phi_new))
-			sigma_y_s=c(sigma_y_s,sigma_y_new)
-			#Update alpha
-			alpha_x_s=c(alpha_x_s,alpha_x_new)
-			#Update dn_y
-			dn_y=dn_y+1
-			#Update dn_x
-			dn_x[j]=dn_x[j]-1
-			dn_x=c(dn_x,1)
-		}
-	}
-	if(u23>(.5*ind2) & ind3){
-	# Choose x cluster among x-clusters in y-clusters with 1 x-clusters
-		k1=sum(dn_x==1)
-		u=runif(1)*k1
-		lj=1
-		while(u>lj){lj=lj+1}
-		j=sum(lj>cumsum(dn_x*(dn_x==1)))+1
-		l=1
-		#Choose y cluster other than j
-		u=runif(1)*(dn_y-1)
-		h=1
-		while(u>h){h=h+1}
-		h=h+(h>=j)
-		#Compute acceptance probability
-		nh=sum(config_y_s==h)
-		njl=sum(config_y_s==j)
-		laccep=-log(alpha_y_s)+lgamma(nh+njl)-lgamma(nh)+lgamma(alpha_x_s[h]+nh)-lgamma(alpha_x_s[h]+nh+njl)-lgamma(njl)-lgamma(alpha_x_s[j])+lgamma(alpha_x_s[j]+njl)+log(alpha_x_s[h])-log(alpha_x_s[j])
-		yjl=matrix(y[config_y_s==j], nrow=njl)
-		Xjl=matrix(X[config_y_s==j,], nrow=njl)
-		C_hat=C+ t(Xjl)%*%Xjl
-		decomp=eigen(C_hat, symmetric=TRUE)
-		iC_hat=decomp$vectors%*%diag(1/decomp$values)%*%t(decomp$vectors)
-		sc=diag(njl)-Xjl%*%iC_hat%*%t(Xjl)
-		decomp=eigen(sc, symmetric=TRUE)
-		isc=decomp$vectors%*%diag(1/decomp$values,njl)%*%t(decomp$vectors)
-		yjl_hat=Xjl%*%mu_theta
-		laccep=laccep-dmvt(c(yjl-yjl_hat), sigma=(b_y/a_y*isc), df = 2*a_y, log = TRUE)+sum(dnorm(yjl,Xjl%*%phi_s[,h], sigma_y_s[h]^.5,log=T))
-		laccep=laccep+log(k1)+log(dn_y-1)-log(sum(dn_x>1)+1+(dn_x[h]==1))
-		accep=min(1,exp(laccep))
-		if(runif(1)<accep){
-			print("Switch 3 accepted")
-			#Switch labels
-			indjl=(config_y_s==j)
-			config_y_s[indjl]=h
-			config_x_s[indjl]=dn_x[h]+1
-			#Update x parameters
-			mu_x_s[[h]]=cbind(mu_x_s[[h]],mu_x_s[[j]][,l])
-			sigma_x_s[[h]]=cbind(sigma_x_s[[h]],sigma_x_s[[j]][,l])
-			if(j<dn_y){
-				config_y_s[config_y_s>j]=config_y_s[config_y_s>j]-1
-				mu_x_s[j:(dn_y-1)]=mu_x_s[(j+1):(dn_y)]
-				sigma_x_s[j:(dn_y-1)]=sigma_x_s[(j+1):(dn_y)]
-				phi_s[j:(dn_y-1)]=phi_s[(j+1):(dn_y)]
-				sigma_y_s[j:(dn_y-1)]=sigma_y_s[(j+1):(dn_y)]
-				alpha_x_s[j:(dn_y-1)]=alpha_x_s[(j+1):(dn_y)]
-				dn_x[j:(dn_y-1)]=dn_x[(j+1):(dn_y)]
-			}
-			#Remove last
-			mu_x_s=mu_x_s[-(dn_y)]
-			sigma_x_s=sigma_x_s[-(dn_y)]
-			phi_s=phi_s[,-(dn_y)]
-			sigma_y_s=sigma_y_s[-(dn_y)]
-			alpha_x_s=alpha_x_s[-(dn_y)]
-			dn_x=dn_x[-(dn_y)]
-			#Update dn_y
-			dn_y=dn_y-1
-		}
-	}
+	# #Propose x-cluster switching
+	# ##Case 1
+	# if(dn_y>1 & sum(dn_x>1)>0){
+	# 	# Choose x cluster among x-clusters in y-clusters with more than 1 x-clusters
+	# 	kb1=sum(dn_x[dn_x>1])
+	# 	u=runif(1)*kb1
+	# 	lj=1
+	# 	while(u>lj){lj=lj+1}
+	# 	j=sum(lj>cumsum(dn_x*(dn_x>1)))+1
+	# 	l=lj-c(0,cumsum(dn_x*(dn_x>1)))[j]
+	# 	#Choose y cluster other than j
+	# 	u=runif(1)*(dn_y-1)
+	# 	h=1
+	# 	while(u>h){h=h+1}
+	# 	h=h+(h>=j)
+	# 	#Calculate acceptance prob
+	# 	nj=sum(config_y_s==j)
+	# 	nh=sum(config_y_s==h)
+	# 	njl=sum(config_x_s[config_y_s==j]==l)
+	# 	laccep=lgamma(nj-njl)-lgamma(nj)+lgamma(nh+njl)-lgamma(nh)+lgamma(alpha_x_s[j]+nj)-lgamma(alpha_x_s[j]+nj-njl)+lgamma(alpha_x_s[h]+nh)-lgamma(alpha_x_s[h]+nh+njl)+log(alpha_x_s[h])-log(alpha_x_s[j])
+	# 	yjl=matrix(matrix(y[config_y_s==j], nrow=nj)[config_x_s[config_y_s==j]==l,], nrow=njl)
+	# 	Xjl=matrix(matrix(X[config_y_s==j,], nrow=nj)[config_x_s[config_y_s==j]==l,], nrow=njl)
+	# 	laccep=laccep+sum(dnorm(yjl,Xjl%*%phi_s[,h], sigma_y_s[h]^.5,log=T))-sum(dnorm(yjl,Xjl%*%phi_s[,j], sigma_y_s[j]^.5,log=T))
+	# 	laccep=laccep+log(kb1)-log(kb1-(dn_x[j]==2)+(dn_x[h]==1))
+	# 	accep=min(1,exp(laccep))
+	# 	if(runif(1)<accep){
+	# 		print("Switch 1 accepted")
+	# 		#Switch labels
+	# 		indjl=(config_y_s==j&config_x_s==l)
+	# 		config_y_s[indjl]=h
+	# 		config_x_s[indjl]=dn_x[h]+1
+	# 		if(dn_x[j]>l){config_x_s[(config_y_s==j&config_x_s>l)]=config_x_s[(config_y_s==j&config_x_s>l)]-1}
+	# 		#Update x parameters
+	# 		mu_x_s[[h]]=cbind(mu_x_s[[h]],mu_x_s[[j]][,l])
+	# 		sigma_x_s[[h]]=cbind(sigma_x_s[[h]],sigma_x_s[[j]][,l])
+	# 		mu_x_s[[j]]=matrix(mu_x_s[[j]][,-l],nrow=p)
+	# 		sigma_x_s[[j]]=matrix(sigma_x_s[[j]][,-l],nrow=p)
+	# 		#Update dn_x
+	# 		dn_x[j]=dn_x[j]-1
+	# 		dn_x[h]=dn_x[h]+1
+	# 	}
+	# }
+	# 
+	# ## Case 2 and 3
+	# u23=runif(1)
+	# ind2=sum(dn_x>1)>0
+	# ind3=(sum(dn_x==1)>0)&(dn_y>1)
+	# if(u23<(.5^ind3) & ind2){
+	# 	# Choose x cluster among x-clusters in y-clusters with more than 1 x-clusters
+	# 	kb1=sum(dn_x[dn_x>1])
+	# 	u=runif(1)*kb1
+	# 	lj=1
+	# 	while(u>lj){lj=lj+1}
+	# 	j=sum(lj>cumsum(dn_x*(dn_x>1)))+1
+	# 	l=lj-c(0,cumsum(dn_x*(dn_x>1)))[j]
+	# 	#Sample new phi
+	# 	nj=sum(config_y_s==j)
+	# 	njl=sum(config_x_s[config_y_s==j]==l)
+	# 	yjl=matrix(matrix(y[config_y_s==j], nrow=nj)[config_x_s[config_y_s==j]==l,], nrow=njl)
+	# 	Xjl=matrix(matrix(X[config_y_s==j,], nrow=nj)[config_x_s[config_y_s==j]==l,], nrow=njl)
+	# 	C_hat=C+ t(Xjl)%*%Xjl
+	# 	decomp=eigen(C_hat, symmetric=TRUE)
+	# 	iC_hat=decomp$vectors%*%diag(1/decomp$values)%*%t(decomp$vectors)
+	# 	mu_hat=iC_hat%*%(C%*%mu_theta+t(Xjl)%*%yjl)
+	# 	a_y_hat=a_y+njl/2
+	# 	b_y_hat=b_y+(sum(yjl^2)+muCmu-t(mu_hat)%*%C_hat%*%mu_hat)/2
+	# 	sigma_y_new=rinvgamma(1,a_y_hat, b_y_hat)
+	# 	phi_new=rmvnorm(1, mu_hat, sigma_y_new*iC_hat,  method=c("chol"))
+	# 	#Sample new alpha_x
+	# 	alpha_x_new=rgamma(1,u_alpha_x, v_alpha_x)	
+	# 	laccep=log(alpha_y_s)+lgamma(nj-njl)-lgamma(nj)+lgamma(alpha_x_s[j]+nj)-lgamma(alpha_x_s[j]+nj-njl)+lgamma(njl)+lgamma(alpha_x_new)-lgamma(alpha_x_new+njl)+log(alpha_x_new)-log(alpha_x_s[j])
+	# 	sc=diag(njl)-Xjl%*%iC_hat%*%t(Xjl)
+	# 	decomp=eigen(sc, symmetric=TRUE)
+	# 	isc=decomp$vectors%*%diag(1/decomp$values,njl)%*%t(decomp$vectors)
+	# 	yjl_hat=Xjl%*%mu_theta
+	# 	laccep=laccep+dmvt(c(yjl-yjl_hat), sigma=(b_y/a_y*isc), df = 2*a_y, log = TRUE)-sum(dnorm(yjl,Xjl%*%phi_s[,j], sigma_y_s[j]^.5,log=T))
+	# 	laccep=laccep+log(kb1)-log(sum(dn_x==1)+1+(dn_x[j]==2))-log(dn_y)
+	# 	accep=min(1,exp(laccep))
+	# 	if(runif(1)<accep){
+	# 		print("Switch 2 accepted")
+	# 		#Switch labels
+	# 		indjl=(config_y_s==j&config_x_s==l)
+	# 		config_y_s[indjl]=dn_y+1
+	# 		config_x_s[indjl]=1
+	# 		if(dn_x[j]>l){config_x_s[(config_y_s==j&config_x_s>l)]=config_x_s[(config_y_s==j&config_x_s>l)]-1}
+	# 		#Update x parameters
+	# 		mu_x_s[[dn_y+1]]=matrix(mu_x_s[[j]][,l],nrow=p)
+	# 		sigma_x_s[[dn_y+1]]=matrix(sigma_x_s[[j]][,l],nrow=p)
+	# 		mu_x_s[[j]]=matrix(mu_x_s[[j]][,-l],nrow=p)
+	# 		sigma_x_s[[j]]=matrix(sigma_x_s[[j]][,-l],nrow=p)
+	# 		#Update y parameters
+	# 		phi_s=cbind(phi_s,t(phi_new))
+	# 		sigma_y_s=c(sigma_y_s,sigma_y_new)
+	# 		#Update alpha
+	# 		alpha_x_s=c(alpha_x_s,alpha_x_new)
+	# 		#Update dn_y
+	# 		dn_y=dn_y+1
+	# 		#Update dn_x
+	# 		dn_x[j]=dn_x[j]-1
+	# 		dn_x=c(dn_x,1)
+	# 	}
+	# }
+	# if(u23>(.5*ind2) & ind3){
+	# # Choose x cluster among x-clusters in y-clusters with 1 x-clusters
+	# 	k1=sum(dn_x==1)
+	# 	u=runif(1)*k1
+	# 	lj=1
+	# 	while(u>lj){lj=lj+1}
+	# 	j=sum(lj>cumsum(dn_x*(dn_x==1)))+1
+	# 	l=1
+	# 	#Choose y cluster other than j
+	# 	u=runif(1)*(dn_y-1)
+	# 	h=1
+	# 	while(u>h){h=h+1}
+	# 	h=h+(h>=j)
+	# 	#Compute acceptance probability
+	# 	nh=sum(config_y_s==h)
+	# 	njl=sum(config_y_s==j)
+	# 	laccep=-log(alpha_y_s)+lgamma(nh+njl)-lgamma(nh)+lgamma(alpha_x_s[h]+nh)-lgamma(alpha_x_s[h]+nh+njl)-lgamma(njl)-lgamma(alpha_x_s[j])+lgamma(alpha_x_s[j]+njl)+log(alpha_x_s[h])-log(alpha_x_s[j])
+	# 	yjl=matrix(y[config_y_s==j], nrow=njl)
+	# 	Xjl=matrix(X[config_y_s==j,], nrow=njl)
+	# 	C_hat=C+ t(Xjl)%*%Xjl
+	# 	decomp=eigen(C_hat, symmetric=TRUE)
+	# 	iC_hat=decomp$vectors%*%diag(1/decomp$values)%*%t(decomp$vectors)
+	# 	sc=diag(njl)-Xjl%*%iC_hat%*%t(Xjl)
+	# 	decomp=eigen(sc, symmetric=TRUE)
+	# 	isc=decomp$vectors%*%diag(1/decomp$values,njl)%*%t(decomp$vectors)
+	# 	yjl_hat=Xjl%*%mu_theta
+	# 	laccep=laccep-dmvt(c(yjl-yjl_hat), sigma=(b_y/a_y*isc), df = 2*a_y, log = TRUE)+sum(dnorm(yjl,Xjl%*%phi_s[,h], sigma_y_s[h]^.5,log=T))
+	# 	laccep=laccep+log(k1)+log(dn_y-1)-log(sum(dn_x>1)+1+(dn_x[h]==1))
+	# 	accep=min(1,exp(laccep))
+	# 	if(runif(1)<accep){
+	# 		print("Switch 3 accepted")
+	# 		#Switch labels
+	# 		indjl=(config_y_s==j)
+	# 		config_y_s[indjl]=h
+	# 		config_x_s[indjl]=dn_x[h]+1
+	# 		#Update x parameters
+	# 		mu_x_s[[h]]=cbind(mu_x_s[[h]],mu_x_s[[j]][,l])
+	# 		sigma_x_s[[h]]=cbind(sigma_x_s[[h]],sigma_x_s[[j]][,l])
+	# 		if(j<dn_y){
+	# 			config_y_s[config_y_s>j]=config_y_s[config_y_s>j]-1
+	# 			mu_x_s[j:(dn_y-1)]=mu_x_s[(j+1):(dn_y)]
+	# 			sigma_x_s[j:(dn_y-1)]=sigma_x_s[(j+1):(dn_y)]
+	# 			phi_s[j:(dn_y-1)]=phi_s[(j+1):(dn_y)]
+	# 			sigma_y_s[j:(dn_y-1)]=sigma_y_s[(j+1):(dn_y)]
+	# 			alpha_x_s[j:(dn_y-1)]=alpha_x_s[(j+1):(dn_y)]
+	# 			dn_x[j:(dn_y-1)]=dn_x[(j+1):(dn_y)]
+	# 		}
+	# 		#Remove last
+	# 		mu_x_s=mu_x_s[-(dn_y)]
+	# 		sigma_x_s=sigma_x_s[-(dn_y)]
+	# 		phi_s=phi_s[,-(dn_y)]
+	# 		sigma_y_s=sigma_y_s[-(dn_y)]
+	# 		alpha_x_s=alpha_x_s[-(dn_y)]
+	# 		dn_x=dn_x[-(dn_y)]
+	# 		#Update dn_y
+	# 		dn_y=dn_y-1
+	# 	}
+	# }
 
 	###Draw other parameters
 

@@ -48,16 +48,14 @@ marg_y[,j]=dt(y_sc,2*a_y)*(a_y*sc/b_y)^.5
 }
 
 #Initialize
-f_pred_mat=matrix(0,m2,sum(k_y)+1)
-f_pred_mat[,1]=marg_y[,1]
-#first m2 elements are for first x_new, etc.
-weight_mat=matrix(0,m,sum(k_y)+1)
-weight_mat[,1]=sum(alpha_y)*marg_x
+f_pred_mat=matrix(0,m2,S)
+weight_mat=matrix(0,m,S)
+weight_list = list(S)
 
 for(s in 1:S){
 
 	#calculate weight matrix
-	weight_mat_s=matrix(0,m,k_y[s])
+	weight_mat_s=matrix(0,m,k_y[s]+1)
 
 	for(j in 1:k_y[s]){
 		nj_s=sum(config_y[s,]==j)
@@ -68,16 +66,15 @@ for(s in 1:S){
 			weight_mat_s[,j]=weight_mat_s[,j]+nj_s*pred_x_new_jhs*njh_s/(alpha_x[[s]][j]+nj_s)
 		}
 	}
-
+	weight_mat[,k_y[s]+1]=alpha_y[s]*marg_x
+	
 	#calculate prediction
 	f_pred_s=dnorm(matrix(y_grid, nrow=m2, ncol=k_y[s]),matrix(1,m2,1)%*%X_new[1,]%*%phi_y[[s]],matrix(1,m2,1)%*%sigma_y[[s]]^.5 )
-
-	st=2
-	if(s!=1){
-		st=st+sum(k_y[1:(s-1)])
-	}
-	f_pred_mat[,st:(sum(k_y[1:s])+1)]=f_pred_s
-	weight_mat[,st:(sum(k_y[1:s])+1)]=weight_mat_s
+	f_pred_s=cbind(f_pred_s, marg_y[,1])
+	
+	weight_list[[s]] = weight_mat_s
+	weight_mat[,s]= rowSums(weight_mat_s)
+	f_pred_mat[,s]= f_pred_s%*%weight_mat_s[1,]/weight_mat[1,s]
 
 	if(((s/S*100)%%1)==0){
 		print(paste(s/S*100,"% completed"))
@@ -105,15 +102,11 @@ for(i in 1:m){
 
 	if(i!=m){
 		#compute f_pred_mat
-		f_pred_mat[,1]=marg_y[,i+1]
-		for(s in 1:S){
-			f_pred_s=dnorm(matrix(y_grid, nrow=m2, ncol=k_y[s]),matrix(1,m2,1)%*%X_new[i+1,]%*%phi_y[[s]],matrix(1,m2,1)%*%sigma_y[[s]]^.5 )
-
-			st=2
-			if(s!=1){
-				st=st+sum(k_y[1:(s-1)])
-			}
-			f_pred_mat[,st:(sum(k_y[1:s])+1)]=f_pred_s
+	  for(s in 1:S){
+	    f_pred_s=dnorm(matrix(y_grid, nrow=m2, ncol=k_y[s]),matrix(1,m2,1)%*%X_new[i+1,]%*%phi_y[[s]],matrix(1,m2,1)%*%sigma_y[[s]]^.5 )
+			f_pred_s=cbind(f_pred_s, marg_y[,i+1])
+			  
+			f_pred_mat[,s]=f_pred_s%*%weight_list[[s]][i+1,]/weight_mat[i+1,s]
 		}
 	}
 }
