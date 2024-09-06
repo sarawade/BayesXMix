@@ -38,7 +38,7 @@ n_new=size(x_new,1);
 m_pred_true=5-log(x_new(:,1)+2);
 
 % Define Y points at which predictive density will be estimated
-Y_grid=(2.4:.02:5.3)';
+Y_grid=(2.3:.02:5.3)';
 ny=length(Y_grid);
 % For simulated data, we can calculate the true predictive density for
 % comparison with estimates
