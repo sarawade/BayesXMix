@@ -15,79 +15,58 @@ setwd("/Users/swade/Documents/GitHub/BayesXMix/data_simulation/excircle")
 # Training Data
 set.seed(1010101)
 n = 800
-p = 2
+p = 1
+x= matrix(0,n,p)
 
 # Covariates
-x= matrix(0,n,p)
-x[,1] = runif(n,-1,8)
-x[,2] = (x[,1]-3.5)^2/3-1+rnorm(n,0,0.05)
+t = runif(n,min=0,max=2*pi) 
+x[,1] = cos(t)
 
 ggplot() +
-  geom_point(aes(x = x[,1], y = x[,2])) +
+  geom_point(aes(x = t, y = x[,1])) +
   theme_bw() +
-  xlab("x_1") +
-  ylab("x_2")
+  xlab("t") +
+  ylab("x")
 
 # Response
-comp_ind = runif(n)<.5
-comp_mean = (x[,1]+2)/60
-eps = rnorm(n,0, 0.05)+comp_mean*comp_ind-comp_mean*(1-comp_ind)
-y = 5-log(x[,1]+2) +eps
-m_true = 5-log(x[,1]+2)
+y = sin(t) +rnorm(n,0,0.05)
+m_true = sin(t)
 
 ggplot() +
   geom_point(aes(x = x[,1], y = y)) +
   theme_bw() +
-  xlab("x_1") +
+  xlab("x") +
   ylab("y") +
-  geom_line(aes(x = x[,1], y = m_true), col ="red")
+  geom_point(aes(x = x[,1], y = m_true), col ="red")
 
 ### PREDICTION
-n_new = 800
 
 # Covariates
-x_new= matrix(0,n_new,p)
-x_new[,1] = runif(n_new,-1,8)
-x_new[,2] = (x_new[,1]-3.5)^2/3-1+rnorm(n_new,0,0.05)
+x_new = seq(-1,1,pi/(2^8))
+n_new = length(x_new)
+x_new= matrix(x_new,n_new,p)
 
 # True regression function
-m_true_new = 5-log(x_new[,1]+2)
+m_true_new = rep(0,n_new)
 
 # True density
-y_grid=seq(2.3,5.4,.02)
+y_grid=seq(-1.2,1.2,.02)
 m2=length(y_grid)
-f_true_new = 0.5*dnorm(matrix(y_grid,nrow=m2,ncol=n_new)-t(matrix(m_true_new,nrow=n_new,ncol=m2)),t(matrix((x_new[,1]+2)/60,nrow=n_new,ncol=m2)) , 0.05) + 0.5*dnorm(matrix(y_grid,nrow=m2,ncol=n_new)-t(matrix(m_true_new,nrow=n_new,ncol=m2)),-t(matrix((x_new[,1]+2)/60,nrow=n_new,ncol=m2)) , 0.05)
+f_true_new = 0.5*dnorm(matrix(y_grid,nrow=m2,ncol=n_new),t(matrix(sin(acos(x_new)),nrow=n_new,ncol=m2)), 0.05) + 0.5*dnorm(matrix(y_grid,nrow=m2,ncol=n_new),t(matrix(sin(acos(x_new)+pi),nrow=n_new,ncol=m2)), 0.05)
 
-ggplot() +
-  geom_point(aes(x = x_new[,1], y = x_new[,2])) +
-  theme_bw() +
-  xlab("x_1") +
-  ylab("x_2")
-
-ggplot() +
-  geom_line(aes(x = x_new[,1], y = m_true_new), col ="red") +
-  theme_bw() +
-  xlab("x_1") +
-  ylab("y") 
-
-#Plot density for a few observations
-xs = sort(x_new[,1], index.return=TRUE)
-inds = xs$ix[c(seq(1,n_new,n_new/5),n_new)]
-cols = rainbow(6)
-ggplot() +
-  geom_line(aes(x = y_grid, y = f_true_new[,inds[1]]), col = cols[1],linetype = "dashed") +
-  geom_line(aes(x = y_grid, y = f_true_new[,inds[2]]), col = cols[2],linetype = "dashed") +
-  geom_line(aes(x = y_grid, y = f_true_new[,inds[3]]), col = cols[3],linetype = "dashed") +
-  geom_line(aes(x = y_grid, y = f_true_new[,inds[4]]), col = cols[4],linetype = "dashed") +
-  geom_line(aes(x = y_grid, y = f_true_new[,inds[5]]), col = cols[5],linetype = "dashed") +
-  geom_line(aes(x = y_grid, y = f_true_new[,inds[6]]), col = cols[6],linetype = "dashed") +
-  theme_bw() +
-  labs( x = "y", y = "Density")
+# Heatmap of true density
+png("excircle_true_dens_heat",width = 500, height = 450)
+f_pred_true = data.frame(x = rep(x_new[,1], each = m2), y = rep(y_grid,n_new), density= c(f_true_new))
+ggplot(f_pred_true) +
+  geom_raster(aes(x,y,fill=density),interpolate = TRUE) +
+  scale_fill_gradient2(low="white", high="red") +
+  theme_classic() 
+dev.off()
 
 # Save data
-save.image("data_ex1_mm.RData")
+save.image("data_ex_circle.RData")
 
-write.csv(cbind(x,y), file = "ex1train_mmerrors.csv", row.names = TRUE)
-write.csv(x_new, file = "ex1test_mmerrors.csv", row.names = TRUE)
-write.csv(f_true_new, file = "ex1test_mmerrors_dens.csv", row.names = TRUE)
+write.csv(cbind(x,y), file = "extrain_circle.csv", row.names = TRUE)
+write.csv(x_new, file = "extest_circle.csv", row.names = TRUE)
+write.csv(f_true_new, file = "extest_circle_dens.csv", row.names = TRUE)
 

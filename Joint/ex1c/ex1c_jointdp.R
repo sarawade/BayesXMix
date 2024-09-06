@@ -23,19 +23,22 @@ load("../.././data_simulation/ex1c/data_ex1_mm.RData")
 #Set prior parameter values
 
 # y parameters
-# remember! variance for beta is sigma^2*iC
 lmfit = lm(y~x[,1]+x[,2])
 mu_theta=matrix(lmfit$coefficients,p+1,1)
-iC=diag(c(100,rep(4,p)))
-C=solve(iC)
 a_y=2
-b_y=1/100
+# Note this is an overestimate of the variance within cluster (may want to divide by a smaller number)
+b_y=sum(lmfit$residuals^2)/(n-p-1)
+# remember! variance for beta is sigma^2*iC
+iC=summary(lmfit)$cov.unscaled/b_y
+C=solve(iC)
 
-# x parameters
-a_x=matrix(2,p,1)
-b_x=matrix(0.1,p,1)
+# x parameters (empirical approach described in Fraley & Raftery (2007) and Wade (2023))
 mu_0=matrix(apply(x,2,mean),p,1)
-c_x=rep(1/40,p)
+a_x=matrix(2,p,1)
+# guess on the number of clusters
+k0 = 6
+b_x=matrix(apply(x,2,var),p,1)/k0^2 #with a_x this is the prior mean of the within cluster variance
+c_x=rep(1/k0^2,p)
 
 # prior on DP concentration parameter
 u_alpha=1
