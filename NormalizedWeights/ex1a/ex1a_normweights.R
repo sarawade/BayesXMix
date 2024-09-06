@@ -107,7 +107,7 @@ ggplot() +
   geom_ribbon(aes(x=y_grid, ymin=lfpred[inds[5],], ymax=ufpred[inds[5],]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
   labs( x = "y", y = "Density")+
-  ylim(0,4.9) 
+  ylim(0,5.3) 
 dev.off()
 
 #empirical l2 prediction error

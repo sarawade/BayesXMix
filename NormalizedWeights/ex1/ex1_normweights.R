@@ -51,8 +51,8 @@ dev.off()
 ### PREDICTION
 pred=as.matrix(read.csv("ex1_pred_nwreg.csv", header = FALSE))
 fpred=as.matrix(read.csv("ex1_fpred_nwreg.csv", header = FALSE))
-lfpred=as.matrix(read.csv("ex1_lpred_nwreg.csv", header = FALSE))
-ufpred=as.matrix(read.csv("ex1_upred_nwreg.csv", header = FALSE))
+lfpred=as.matrix(read.csv("ex1_lfpred_nwreg.csv", header = FALSE))
+ufpred=as.matrix(read.csv("ex1_ufpred_nwreg.csv", header = FALSE))
 
 ###Plot Prediction
 #with credible intervals but without data
@@ -107,7 +107,7 @@ ggplot() +
   geom_ribbon(aes(x=y_grid, ymin=lfpred[inds[5],], ymax=ufpred[inds[5],]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
   labs( x = "y", y = "Density")+
-  ylim(0,9.8) +
+  ylim(0,11.5) +
   xlim(2.4,4.2)
 dev.off()
 
@@ -117,7 +117,7 @@ l2_err=sum(((m_true_new-pred[,1])^2)/n_new)^.5
 l1_err=sum((abs(m_true_new-pred[,1]))/n_new)
 
 #estimated l1 distance for density
-l1_dist=colSums(abs(f_true_new-fpred))*(y_grid[2]-y_grid[1])
+l1_dist=colSums(abs(f_true_new-t(fpred)))*(y_grid[2]-y_grid[1])
 ggplot()+
   geom_point(aes(x=x[,1],y=l1_dist)) +
   labs(x = "x_1", y = "l1 distance") +
