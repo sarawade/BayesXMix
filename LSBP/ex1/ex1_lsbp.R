@@ -161,7 +161,7 @@ ggplot() +
   geom_ribbon(aes(x=y_grid, ymin=lower_Gibbs[,5], ymax=upper_Gibbs[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
   labs( x = "y", y = "Density")+
-  ylim(0,9.8) +
+  ylim(0,11.5) +
   xlim(2.4,4.2)
 dev.off()
 

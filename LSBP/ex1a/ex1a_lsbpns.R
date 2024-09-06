@@ -94,8 +94,6 @@ for(i in 1:length(y_grid)){  # Cycle over the y grid
 
 # For a subet of points compute also pointwise credible intervals
 # Design matrix for the kernel
-inds = c(1,2,201,202,401,402,601,602)
-# Design matrix for the kernel
 X1<- cbind(1,x_new[inds,1],x_new[inds,2]) 
 # Design matrix for the weights
 X2  <- cbind(1,ns(x_new[inds,1],knots=attr(Basis1,"knots"),Boundary.knots=attr(Basis1,"Boundary.knots")),
@@ -175,7 +173,7 @@ ggplot() +
   geom_ribbon(aes(x=y_grid, ymin=lower_Gibbs[,5], ymax=upper_Gibbs[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
   labs( x = "y", y = "Density")+
-  ylim(0,4.9)
+  ylim(0,5.3)
 dev.off()
 
 #empirical l2 prediction error

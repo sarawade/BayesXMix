@@ -159,6 +159,7 @@ output_cred_pred=predict_cred_edp(.05,S,n_new,p,x_new, mu_theta, C, a_y, b_y, mu
 
 #Compute predictive density with credible bounds
 source(".././joint/predict_fcred_edp.R")
+inds = c(1,2,201,202,401,402,601,602)
 output_fcred_pred=predict_fcred_edp(.05, S,length(inds),m2,p,x_new[inds,], y_grid, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, k_y, k_x, config_y, config_x, output$alpha_x, output$alpha_y, output$phi_y, output$sigma_y, output$mu_x, output$sigma_x ) 
 
 save.image("ex1_jointEDP.RData")
@@ -216,7 +217,7 @@ ggplot() +
   geom_ribbon(aes(x=y_grid, ymin=output_fcred_pred$l_fpred[,5], ymax=output_fcred_pred$u_fpred[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
   labs( x = "y", y = "Density")+
-  ylim(0,9.8) +
+  ylim(0,11.5) +
   xlim(2.4,4.2)
 dev.off()
 

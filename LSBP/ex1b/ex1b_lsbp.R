@@ -10,18 +10,17 @@ library(MCMCpack)
 library(LSBP)
 library(splines)
 
-setwd("/Users/swade/Documents/GitHub/BayesXMix/LSBP/ex1")
+setwd("/Users/swade/Documents/GitHub/BayesXMix/LSBP/ex1b")
 
 ##############################################
-## Example 1: normal errors
+## Example 1: skew-errors
 ##############################################
 
 # Load data
-load("../.././data_simulation/ex1/data_ex1.RData")
+load("../.././data_simulation/ex1b/data_ex1_skew.RData")
 ex1data  <- data.frame(x1 = x[,1],x2 = x[,2],y = y)
 
 # MCMC parameters (iterations, burnin, truncation level)
-p_splines <- 5         # Number of splines components
 R         <- 20000     # Number of iterations
 burn_in   <- 5000      # Burn-in period
 H         <- 20        # Number of mixture components
@@ -29,24 +28,20 @@ H         <- 20        # Number of mixture components
 # Set prior
 # Note that empirically smaller/larger values of B_mixing seem to result in smoother/sharper boundaries
 lmfit = lm(y~x1+x2, data = ex1data)
-prior       <- prior_LSBP(p_kernel = p+1,p_mixing = p*p_splines+1,
-                          b_mixing = rep(0,p*p_splines+1), B_mixing=diag(c(100,rep(10,p*p_splines))), 
+prior       <- prior_LSBP(p_kernel = p+1,p_mixing = p+1, 
+                          b_mixing =c(0,0,0), B_mixing=diag(c(100,10,10)), 
                           b_kernel = c(lmfit$coefficients), B_kernel=summary(lmfit)$cov.unscaled, 
                           a_tau = 2, b_tau= sum(lmfit$residuals^2)/(n-p-1))
 
-# Linear kernel and splines model for mixing weights
-Basis1       <- ns(ex1data$x1,p_splines)
-Basis2       <- ns(ex1data$x2,p_splines)
-ex1data  <- data.frame(ex1data, BS1=Basis1, BS2=Basis2)
-# the symbol '|', separates the kernel covariates and the mixing covariates, respectively
-model_formula <- Formula::as.Formula(y ~ x1 +x2 | BS1.1 + BS1.2 + BS1.3 + BS1.4 + BS1.5 + BS2.1 + BS2.2 + BS2.3 + BS2.4 + BS2.5)
+# Local linear model
+model_formula <- Formula::as.Formula(y ~ x1 +x2 )
 
 ### Fit model
 set.seed(10) # The seed is setted so that the Gibbs sampler is reproducible.
 fit_Gibbs   <- LSBP_Gibbs(model_formula, data=ex1data, H=H, prior=prior, 
                           control=control_Gibbs(R=R,burn_in=burn_in,method_init="cluster"), verbose=TRUE)
 
-save.image("ex1_lsbpns.RData")
+save.image("ex1b_lsbp.RData")
 
 ######## Results
 
@@ -58,10 +53,7 @@ ggplot()+
 ##### Prediction
 
 ## Compute predictive mean
-newdata <- data.frame(y=0, x1=x_new[,1], x2=x_new[,2], 
-                      BS1= ns(x_new[,1],knots=attr(Basis1,"knots"),Boundary.knots=attr(Basis1,"Boundary.knots")),
-                      BS2= ns(x_new[,2],knots=attr(Basis2,"knots"),Boundary.knots=attr(Basis2,"Boundary.knots")))
-
+newdata     <- data.frame(y=0, x1=x_new[,1], x2=x_new[,2])
 
 gibbs_mean = predict(fit_Gibbs, type = "mean", newdata=newdata)
 
@@ -71,11 +63,9 @@ upred_lsbp = apply(gibbs_mean,2,function(x) quantile(x,0.975))
 
 ## Compute predictive conditional density
 
-# Design matrix for the kernel
-X1 <- cbind(1,x_new[,1],x_new[,2])      
-# Design matrix for the weights
-X2  <- cbind(1,ns(x_new[,1],knots=attr(Basis1,"knots"),Boundary.knots=attr(Basis1,"Boundary.knots")),
-             ns(x_new[,2], knots=attr(Basis2,"knots"), Boundary.knots=attr(Basis2,"Boundary.knots")))
+# Design matrix for the kernel and weights
+X1           <- cbind(1,x_new[,1],x_new[,2])      
+X2 = X1
 
 # Conditional density - Gibbs sampling
 est_Gibbs_all <- matrix(0,length(y_grid),n_new)
@@ -93,22 +83,17 @@ for(i in 1:length(y_grid)){  # Cycle over the y grid
 }
 
 # For a subet of points compute also pointwise credible intervals
-# Design matrix for the kernel
-inds = c(1,2,201,202,401,402,601,602)
-# Design matrix for the kernel
+# Design matrix for the kernel and weights for the subset
 X1<- cbind(1,x_new[inds,1],x_new[inds,2]) 
-# Design matrix for the weights
-X2  <- cbind(1,ns(x_new[inds,1],knots=attr(Basis1,"knots"),Boundary.knots=attr(Basis1,"Boundary.knots")),
-             ns(x_new[inds,2], knots=attr(Basis2,"knots"), Boundary.knots=attr(Basis2,"Boundary.knots")))
-
+X2 = X1
 
 # Conditional density - Gibbs sampling
-est_Gibbs <- matrix(0,length(y_grid),8)
-lower_Gibbs <- matrix(0,length(y_grid),8)
-upper_Gibbs <- matrix(0,length(y_grid),8)
+est_Gibbs <- matrix(0,length(y_grid),length(inds))
+lower_Gibbs <- matrix(0,length(y_grid),length(inds))
+upper_Gibbs <- matrix(0,length(y_grid),length(inds))
 
 for(i in 1:length(y_grid)){  # Cycle over the y grid
-  pred_Gibbs_i = matrix(0, R, 8) 
+  pred_Gibbs_i = matrix(0, R, length(inds)) 
   for(r in 1:R){      # Cycle over the iterations of the MCMC chain
     pred_Gibbs_i[r,] <- c(LSBP_density(y_grid[i],X1,X2,
                                        fit_Gibbs$param$beta_mixing[r,,],
@@ -120,11 +105,11 @@ for(i in 1:length(y_grid)){  # Cycle over the y grid
   upper_Gibbs[i,]    <- apply(pred_Gibbs_i,2,function(x) quantile(x,0.975))
 }
 
-save.image("ex1_lsbpns.RData")
+save.image("ex1b_lsbp.RData")
 
 ### Plot Prediction
 #with credible intervals but without data
-png("ex1_lsbpns_pred.png",width = 500, height = 450)
+png("ex1b_lsbp_pred.png",width = 500, height = 450)
 ggplot() +
   geom_line(aes(x = x_new[,1], y = ypred_lsbp), col = "black") +
   geom_line(aes(x = x_new[,1], y = m_true_new), col = "red") +
@@ -161,7 +146,7 @@ ggplot() +
   labs( x = "y", y = "Density")
 
 #PLot density for a few observations
-png("ex1_lsbpns_fpred.png",width = 500, height = 450)
+png("ex1b_lsbp_fpred.png",width = 500, height = 450)
 cols = rainbow(6)
 ggplot() +
   geom_line(aes(x = y_grid, y = est_Gibbs[,1]), col = cols[1]) +
@@ -175,8 +160,7 @@ ggplot() +
   geom_ribbon(aes(x=y_grid, ymin=lower_Gibbs[,5], ymax=upper_Gibbs[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
   labs( x = "y", y = "Density")+
-  ylim(0,11.5) +
-  xlim(2.4,4.2)
+  ylim(0,9)
 dev.off()
 
 #empirical l2 prediction error
@@ -205,4 +189,3 @@ ci_length = upred_lsbp - lpred_lsbp
 mean(ci_length)
 min(ci_length)
 max(ci_length)
-
