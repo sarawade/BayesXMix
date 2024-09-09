@@ -53,8 +53,8 @@ burnin=5000
 X = cbind(rep(1,n), x)
 
 ## Initial chain: Random Cluster assignments
-ky_init=4
-kx_init=4
+ky_init=3
+kx_init=3
 
 config_y_init=apply(matrix(runif(n),nrow=n,ncol=(ky_init-1))>t(matrix(c(1:(ky_init-1))/ky_init,nrow=(ky_init-1),ncol=n)),1,sum)+1
 config_x_init=apply(matrix(runif(n),nrow=n,ncol=(kx_init-1))>t(matrix(c(1:(kx_init-1))/kx_init,nrow=(kx_init-1),ncol=n)),1,sum)+1

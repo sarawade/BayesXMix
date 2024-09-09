@@ -198,13 +198,28 @@ for(s in 1:(S+burnin-1)){
 		#f <- function (k) sum(exp(k+log_xy_prob))-1
 		#k_star=uniroot(f,lower=-10^(10),upper=10^20)$root
 		#probs=exp(k_star+log_xy_prob)
-		probs=exp(log_xy_prob)/sum(exp(log_xy_prob))
+		maxprob =  max(log_xy_prob)
+		probs=exp(log_xy_prob-maxprob)/sum(exp(log_xy_prob-maxprob))
 
 		#set value of config according to probability	
 		config_chosen=sum(runif(1)>c(cumsum(probs[-length(probs)]),1))+1
 		c_update_y[i]=sum(cum_dn_ni_x<config_chosen)
 		c_update_x[i]=config_chosen-cum_dn_ni_x[c_update_y[i]]	
-
+		
+		# Alternate allocation
+		# First allocate y
+		log_y_cond_prob = log_prob_y
+		for(j in 1:(dn_ni_y+1)){
+		  maxxprob = max(log_prob_x[[j]])
+		  log_y_cond_prob[j]=log_y_cond_prob[j] + log(sum(exp(log_prob_x[[j]]- maxxprob))) + maxxprob
+		}
+		maxyprob = max(log_y_cond_prob)
+		probsy = exp(log_y_cond_prob - maxyprob)/sum(exp(log_y_cond_prob - maxyprob))
+		c_update_y[i] = sum(runif(1)>c(cumsum(probsy[-length(probsy)]),1))+1
+		# Then allocate x
+		maxxprob = max(log_prob_x[[c_update_y[i]]])
+		probsx = exp(log_prob_x[[c_update_y[i]]] - maxxprob)/sum(exp(log_prob_x[[c_update_y[i]]] - maxxprob))
+		c_update_x[i] = sum(runif(1)>c(cumsum(probsx[-length(probsx)]),1))+1
 		
 		#update parameters if new chosen
 		#for y
