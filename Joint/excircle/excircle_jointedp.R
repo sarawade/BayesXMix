@@ -8,28 +8,29 @@ library(msm)
 library(MCMCpack)
 library(mcclust.ext)
 
-setwd("/Users/swade/Documents/GitHub/BayesXMix/Joint/ex1b")
+setwd("/Users/swade/Documents/GitHub/BayesXMix/Joint/excircle")
 
 ##############################################
-## Example 1: skewed normal errors
+## Example 1: skew-errors
 ##############################################
 
 # Load data
-load("../.././data_simulation/ex1b/data_ex1_skew.RData")
+load("../.././data_simulation/excircle/data_ex_circle.RData")
 
 #############
-#### Joint EDP
+#### Joint DP
 #############
 #Set prior parameter values
 
 # y parameters
-lmfit = lm(y~x[,1]+x[,2])
+lmfit = lm(y~x[,1])
 mu_theta=matrix(lmfit$coefficients,p+1,1)
 a_y=2
 # Note this is an overestimate of the variance within cluster (may want to divide by a smaller number)
-b_y=sum(lmfit$residuals^2)/(n-p-1)
+k0y = 5
+b_y=sum(lmfit$residuals^2)/(n-p-1)/k0y^2
 # remember! variance for beta is sigma^2*iC
-iC=diag(c(10,1,1))/b_y*var(y)
+iC=diag(c(10,1))/b_y*var(y)
 C=solve(iC)
 
 # x parameters (empirical approach described in Fraley & Raftery (2007) and Wade (2023))
@@ -114,7 +115,7 @@ source(".././joint/edpyx_mcmc.R")
 set.seed(101010)
 output=edp_mcmc(S, burnin, y, x, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, u_alpha_x, v_alpha_x, u_alpha_y, v_alpha_y, config_y_init, config_x_init, phi_init, sigma_y_init, mu_x_init, sigma_x_init,alpha_y_init, alpha_x_init)
 
-save.image("ex1_jointEDP_skew.RData")
+save.image("excircle_jointEDP.RData")
 
 ### Results
 
@@ -140,7 +141,7 @@ plotpsm(psm)
 
 # y-Clustering estimate
 output_vi=minVI(psm,config_y)
-png("ex1_jedp_clus_skewerrors.png",width = 500, height = 450)
+png("excircle_jedp_clus.png",width = 500, height = 450)
 ggplot() +
   geom_point(aes(x = x[,1], y = y, color = as.factor(output_vi$cl))) +
   theme_bw() +
@@ -159,20 +160,22 @@ output_cred_pred=predict_cred_edp(.05,S,n_new,p,x_new, mu_theta, C, a_y, b_y, mu
 
 #Compute predictive density with credible bounds
 source(".././joint/predict_fcred_edp.R")
+xs = sort(x_new[,1], index.return=TRUE)
+inds = xs$ix[c(seq(1,n_new,n_new/5),n_new)]
 output_fcred_pred=predict_fcred_edp(.05, S,length(inds),m2,p,x_new[inds,], y_grid, mu_theta, C, a_y, b_y, mu_0, c_x, a_x, b_x, k_y, k_x, config_y, config_x, output$alpha_x, output$alpha_y, output$phi_y, output$sigma_y, output$mu_x, output$sigma_x ) 
 
-save.image("ex1_jointEDP_skew.RData")
+save.image("excircle_jointEDP.RData")
 
 ###Plot Prediction
 #with credible intervals but without data
-png("ex1_jedp_pred_skewerrors.png",width = 500, height = 450)
 ggplot() +
-  geom_line(aes(x = x_new[,1], y = output_cred_pred$y_pred), col = "black") +
-  geom_line(aes(x = x_new[,1], y = m_true_new), col = "red") +
-  geom_ribbon(aes(x = x_new[,1], ymin=output_cred_pred$l_pred, ymax=output_cred_pred$u_pred), alpha=0.2) +
+  geom_point(aes(x = x_new[,1], y = output_cred_pred$y_pred), col = "black") +
+  geom_point(aes(x = x_new[,1], y = m_true_new), col = "red") +
+  geom_point(aes(x = x_new[,1], y = output_cred_pred$l_pred), col = "black", shape =25) +
+  geom_point(aes(x = x_new[,1], y = output_cred_pred$u_pred), col = "black", shape =17) +
   theme_bw() +
-  labs( x = "x_1", y = "y") 
-dev.off()
+  labs( x = "x", y = "y") +
+  ylim(-1.1,1.1)
 
 #with data but without credible intervals
 ggplot() +
@@ -181,15 +184,6 @@ ggplot() +
   geom_line(aes(x = x_new[,1], y = m_true_new), col = "red") +
   theme_bw() +
   labs( x = "x_1", y = "y")
-
-#Plot y_hat_true vs y_pred
-ggplot() +
-  geom_point(aes(x = m_true_new, y = output_cred_pred$y_pred), col = "black") +
-  geom_point(aes(x = m_true_new, y = output_cred_pred$l_pred), col = "black", shape = 25) +
-  geom_point(aes(x = m_true_new, y = output_cred_pred$u_pred), col = "black", shape = 24) +
-  geom_line(aes(x = m_true_new, y = m_true_new), col = "grey") +
-  theme_bw() +
-  labs( x = "True y", y = "Estimated y")
 
 #PLot density for a single observation
 i = 1
@@ -201,7 +195,7 @@ ggplot() +
   labs( x = "y", y = "Density")
 
 #PLot density for a few observations
-png("ex1_jedp_fpred_skewerrors.png",width = 500, height = 450)
+png("excircle_jedp_dens",width = 500, height = 450)
 cols = rainbow(6)
 ggplot() +
   geom_line(aes(x = y_grid, y = output_fcred_pred$f_pred[,1]), col = cols[1]) +
@@ -217,6 +211,15 @@ ggplot() +
   labs( x = "y", y = "Density")
 dev.off()
 
+#PLot true density heatmap.
+png("excircle_jedp_dens_heat",width = 500, height = 450)
+df = data.frame(x = rep(x_new[,1], each = m2), y = rep(y_grid,n_new), density= c(output_pred$f_pred))
+ggplot(df) +
+  geom_raster(aes(x,y,fill=density),interpolate = TRUE) +
+  scale_fill_gradient2(low="white", high="red") +
+  theme_classic() 
+dev.off()
+
 #empirical l2 prediction error
 l2_err=sum(((m_true_new-output_pred$y_pred)^2)/n_new)^.5
 
@@ -224,6 +227,13 @@ l1_err=sum((abs(m_true_new-output_pred$y_pred))/n_new)
 
 #estimated l1 distance for density
 l1_dist=colSums(abs(f_true_new-output_pred$f_pred))*(y_grid[2]-y_grid[1])
+
+png("excircle_jedp_l1dist",width = 500, height = 500)
+ggplot() +
+  geom_line(aes(x=x_new,y=l1_dist)) +
+  labs( x = "x", y = "l1 distance", title = paste("Avg l1 distance:", round(mean(l1_dist),4)))+
+  theme_bw()
+dev.off()
 
 #Average l1 distance
 mean(l1_dist)
