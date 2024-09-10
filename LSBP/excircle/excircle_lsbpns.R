@@ -32,7 +32,7 @@ lmfit = lm(y~x1, data = ex1data)
 k0 = 10
 prior       <- prior_LSBP(p_kernel = p+1,p_mixing = p*p_splines+1,
                           b_mixing = rep(0,p*p_splines+1), B_mixing=diag(c(100,rep(10,p*p_splines))), 
-                          b_kernel = c(lmfit$coefficients), B_kernel=k0^2*summary(lmfit)$cov.unscaled, 
+                          b_kernel = c(lmfit$coefficients), B_kernel=diag(c(10,1))*var(y), 
                           a_tau = 2, b_tau= sum(lmfit$residuals^2)/(n-p-1)/k0^2)
 
 # Linear kernel and splines model for mixing weights
@@ -170,8 +170,7 @@ ggplot() +
   geom_line(aes(x = y_grid, y = f_true_new[,inds[5]]), col = cols[5],linetype = "dashed") +
   geom_ribbon(aes(x=y_grid, ymin=lower_Gibbs[,5], ymax=upper_Gibbs[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
-  labs( x = "y", y = "Density")+
-  ylim(0,9)
+  labs( x = "y", y = "Density")
 dev.off()
 
 #PLot heatmap of density for a few observations

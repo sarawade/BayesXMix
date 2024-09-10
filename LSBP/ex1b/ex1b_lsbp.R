@@ -30,7 +30,7 @@ H         <- 20        # Number of mixture components
 lmfit = lm(y~x1+x2, data = ex1data)
 prior       <- prior_LSBP(p_kernel = p+1,p_mixing = p+1, 
                           b_mixing =c(0,0,0), B_mixing=diag(c(100,10,10)), 
-                          b_kernel = c(lmfit$coefficients), B_kernel=summary(lmfit)$cov.unscaled, 
+                          b_kernel = c(lmfit$coefficients), B_kernel=diag(c(10,1,1))*var(y), 
                           a_tau = 2, b_tau= sum(lmfit$residuals^2)/(n-p-1))
 
 # Local linear model
@@ -115,8 +115,7 @@ ggplot() +
   geom_line(aes(x = x_new[,1], y = m_true_new), col = "red") +
   geom_ribbon(aes(x = x_new[,1], ymin=lpred_lsbp, ymax=upred_lsbp), alpha=0.2) +
   theme_bw() +
-  labs( x = "x_1", y = "y") +
-  ylim(1.7,5.1)
+  labs( x = "x_1", y = "y") 
 dev.off()
 
 #with data but without credible intervals
@@ -159,8 +158,7 @@ ggplot() +
   geom_line(aes(x = y_grid, y = f_true_new[,inds[5]]), col = cols[5],linetype = "dashed") +
   geom_ribbon(aes(x=y_grid, ymin=lower_Gibbs[,5], ymax=upper_Gibbs[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
-  labs( x = "y", y = "Density")+
-  ylim(0,9)
+  labs( x = "y", y = "Density")
 dev.off()
 
 #empirical l2 prediction error

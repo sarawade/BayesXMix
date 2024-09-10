@@ -29,7 +29,7 @@ a_y=2
 # Note this is an overestimate of the variance within cluster (may want to divide by a smaller number)
 b_y=sum(lmfit$residuals^2)/(n-p-1)
 # remember! variance for beta is sigma^2*iC
-iC=summary(lmfit)$cov.unscaled/b_y
+iC=diag(c(10,1,1))/b_y*var(y)
 C=solve(iC)
 
 # x parameters (empirical approach described in Fraley & Raftery (2007) and Wade (2023))
@@ -161,8 +161,7 @@ ggplot() +
   geom_line(aes(x = x_new[,1], y = m_true_new), col = "red") +
   geom_ribbon(aes(x = x_new[,1], ymin=output_cred_pred$l_pred, ymax=output_cred_pred$u_pred), alpha=0.2) +
   theme_bw() +
-  labs( x = "x_1", y = "y") +
-  ylim(1.7,5.1)
+  labs( x = "x_1", y = "y") 
 dev.off()
 
 #with data but without credible intervals
@@ -205,8 +204,7 @@ ggplot() +
   geom_line(aes(x = y_grid, y = f_true_new[,inds[5]]), col = cols[5],linetype = "dashed") +
   geom_ribbon(aes(x=y_grid, ymin=output_fcred_pred$l_fpred[,5], ymax=output_fcred_pred$u_fpred[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
-  labs( x = "y", y = "Density")+
-  ylim(0,9) 
+  labs( x = "y", y = "Density")
 dev.off()
 
 #empirical l2 prediction error
