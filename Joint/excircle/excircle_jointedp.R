@@ -11,7 +11,7 @@ library(mcclust.ext)
 setwd("/Users/swade/Documents/GitHub/BayesXMix/Joint/excircle")
 
 ##############################################
-## Example 1: skew-errors
+## Example 4: Implicit/Circle
 ##############################################
 
 # Load data
@@ -145,8 +145,7 @@ png("excircle_jedp_clus.png",width = 500, height = 450)
 ggplot() +
   geom_point(aes(x = x[,1], y = y, color = as.factor(output_vi$cl))) +
   theme_bw() +
-  labs( x = "x_1", y = "y", color = "Cluster") +
-  geom_line(aes(x = x[,1], y = m_true), col ="red")
+  labs( x = "x_1", y = "y", color = "Cluster") 
 dev.off()
 
 ### PREDICTION

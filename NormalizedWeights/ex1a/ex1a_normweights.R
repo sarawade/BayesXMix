@@ -62,8 +62,7 @@ ggplot() +
   geom_line(aes(x = x_new[,1], y = m_true_new), col = "red") +
   geom_ribbon(aes(x = x_new[,1], ymin=pred[,2], ymax=pred[,3]), alpha=0.2) +
   theme_bw() +
-  labs( x = "x_1", y = "y") +
-  ylim(1.7,5.1)
+  labs( x = "x_1", y = "y") 
 dev.off()
 
 #with data but without credible intervals
@@ -106,8 +105,7 @@ ggplot() +
   geom_line(aes(x = y_grid, y = f_true_new[,inds[5]]), col = cols[5],linetype = "dashed") +
   geom_ribbon(aes(x=y_grid, ymin=lfpred[inds[5],], ymax=ufpred[inds[5],]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
-  labs( x = "y", y = "Density")+
-  ylim(0,5.3) 
+  labs( x = "y", y = "Density")
 dev.off()
 
 #empirical l2 prediction error

@@ -65,20 +65,20 @@ clear S burnin thin
 % Hyperparameters for the Normal-InverseGamma prior for the (beta,sigma^2)_j
 % beta0 is the mean for beta|sigma^2
 beta0=[0.021,-0.028]'; 
-% sigma^2*iC is the variance for beta|sigma^2
-iC=diag([100,4]);
 % alpha1/alpha2 is the mean for 1/sigma^2
 alpha1=2;
-alpha2=1/100;
+alpha2=0.01995977;
+% sigma^2*iC is the variance for beta|sigma^2
+iC = diag([10,1])/alpha2*var(Y);
 
 % Hyperparameters for the Normal-Gamma prior for the (mu_j,tau)
 % mu0 is the mean for mu|tau
-mu0=[-0.07]';
-% c*tau is the precision for mu|tau 
-c=[1/10]';
+mu0=[-0.0659052];
 % a1/a2 is the mean for tau
-a1=[2]';
-a2=[0.1]';
+a1=[2];
+a2=[0.01388301];
+% c*tau is the precision for mu|tau 
+c=[1/36];
 
 % Generate data structure for NPRegNW function and clear auxiliary
 % variables

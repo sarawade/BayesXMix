@@ -67,11 +67,11 @@ clear S burnin thin
 % Hyperparameters for the Normal-InverseGamma prior for the (beta,sigma^2)_j
 % beta0 is the mean for beta|sigma^2
 beta0=[4.1197, -0.2186, 0.07085]'; 
-% sigma^2*iC is the variance for beta|sigma^2
-iC= [0.48380782, -0.0835313147, -0.0379988154; -0.08353131,  0.0242974160, -0.0008902343;-0.03799882, -0.0008902343,  0.0378376689];
 % alpha1/alpha2 is the mean for 1/sigma^2
 alpha1=2;
 alpha2=0.00822128;
+% sigma^2*iC is the variance for beta|sigma^2
+iC = diag([10,1,1])/alpha2*var(Y);
 
 % Hyperparameters for the Normal-Gamma prior for the (mu_j,tau)
 % mu0 is the mean for mu|tau
