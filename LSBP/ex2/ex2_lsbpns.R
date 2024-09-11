@@ -92,7 +92,8 @@ for(i in 1:length(y_grid)){  # Cycle over the y grid
 
 # For a subet of points compute also pointwise credible intervals
 # Design matrix for the kernel
-inds = seq(1,n_new, 100)
+xs = sort(x_new[,1], index.return=TRUE)
+inds = xs$ix[c(seq(1,n_new,n_new/5),n_new)]
 X1<- cbind(1,x_new[inds,1]) 
 # Design matrix for the weights
 X2  <- cbind(1,ns(x_new[inds,1],knots=attr(Basis1,"knots"),Boundary.knots=attr(Basis1,"Boundary.knots")))
