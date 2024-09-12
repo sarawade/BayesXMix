@@ -35,7 +35,7 @@ H         <- 20        # Number of mixture components
 lmfit = lm(y~x1+x2, data = ex1data)
 k0 = 5 # prior guess on the number of clusters, divide the SD of the linear regression residuals by this factor to encourage smaller variance within cluster
 prior       <- prior_LSBP(p_kernel = p+1,p_mixing = p*p_splines+1,
-                          b_mixing = rep(0,p*p_splines+1), B_mixing=diag(rep(10^4,p*p_splines+1)), 
+                          b_mixing = rep(0,p*p_splines+1), B_mixing=diag(rep(1,p*p_splines+1)), 
                           b_kernel = c(lmfit$coefficients), B_kernel=diag(c(10,rep(1,p)))*var(y),  
                           a_tau = 2, b_tau= sum(lmfit$residuals^2)/(n-p-1)/k0^2)
 
@@ -51,7 +51,7 @@ set.seed(10) # The seed is setted so that the Gibbs sampler is reproducible.
 fit_Gibbs   <- LSBP_Gibbs(model_formula, data=ex1data, H=H, prior=prior, 
                           control=control_Gibbs(R=R,burn_in=burn_in,method_init="cluster"), verbose=TRUE)
 
-save.image("ex3_lsbpns_p2.RData")
+save.image("ex3_lsbpns_p3.RData")
 
 ######## Results
 
@@ -123,12 +123,12 @@ for(i in 1:length(y_grid)){  # Cycle over the y grid
   upper_Gibbs[i,]    <- apply(pred_Gibbs_i,2,function(x) quantile(x,0.975))
 }
 
-save.image("ex3_lsbpns_p2.RData")
+save.image("ex3_lsbpns_p3.RData")
 
 ### Plot Prediction
 
 #Heat map of mean
-png("ex3_lsbpns_pred_heat_p2.png",width = 500, height = 450)
+png("ex3_lsbpns_pred_heat_p3.png",width = 500, height = 450)
 df = data.frame(x1 =x_new[,1],x2=x_new[,2],y = ypred_lsbp)
 ggplot(df) +
   geom_raster(aes(x1,x2,fill= y),interpolate = TRUE) +
@@ -136,7 +136,7 @@ ggplot(df) +
 dev.off()
 
 #with credible intervals but without data
-png("ex3_lsbpns_pred_p2.png",width = 500, height = 450)
+png("ex3_lsbpns_pred_p3.png",width = 500, height = 450)
 xnew2 = 1.5
 ggplot() +
   geom_line(aes(x = x_new[x_new[,2]==xnew2,1], y = ypred_lsbp[x_new[,2]==xnew2]), col = "black") +
@@ -157,7 +157,7 @@ ggplot() +
 
 
 #PLot density for a few observations
-png("ex3_lsbpns_fpred_p2.png",width = 500, height = 450)
+png("ex3_lsbpns_fpred_p3.png",width = 500, height = 450)
 cols = rainbow(6)
 ggplot() +
   geom_line(aes(x = y_grid, y = est_Gibbs[,1]), col = cols[1]) +
