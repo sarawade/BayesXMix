@@ -70,19 +70,19 @@ clear S burnin thin
 % beta0 is the mean for beta|sigma^2
 beta0=[0.3256765, 0.7272275]';
 % sigma^2*iC is the variance for beta|sigma^2
-iC=diag([100,10]);
-% alpha1/alpha2 is the mean for 1/sigma^2
 alpha1=2;
-alpha2=1/10;
+alpha2=0.262331;
+% sigma^2*iC is the variance for beta|sigma^2
+iC = diag([10,1])/alpha2*var(Y);
 
 % Hyperparameters for the Normal-Gamma prior for the (mu_j,tau)
 % mu0 is the mean for mu|tau
 mu0=[3.927097]';
 % c*tau is the precision for mu|tau 
-c=[1/10]';
+c=[1/36]';
 % a1/a2 is the mean for tau
 a1=[2]';
-a2=[1]';
+a2=[0.3071315]';
 
 % Generate data structure for NPRegNW function and clear auxiliary
 % variables
@@ -206,11 +206,11 @@ savgL1_f_pred=mean(L1_f_pred);
 %% SAVE WORKSPACE %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-save 'ex2/example2_nwreg_v3'
+save 'ex2/example2_nwreg'
 
-csvwrite('ex2/ex2_pred_nwreg_v3.csv',[Y_pred,Y_pred_CI(:,1:2)]);
-csvwrite('ex2/ex2_fpred_nwreg_v3.csv',Y_fpred);
-csvwrite('ex2/ex2_lfpred_nwreg_v3.csv',l_fpred);
-csvwrite('ex2/ex2_ufpred_nwreg_v3.csv',u_fpred);
-csvwrite('ex2/ex2_config_nwreg_v3.csv',d);
+csvwrite('ex2/ex2_pred_nwreg.csv',[Y_pred,Y_pred_CI(:,1:2)]);
+csvwrite('ex2/ex2_fpred_nwreg.csv',Y_fpred);
+csvwrite('ex2/ex2_lfpred_nwreg.csv',l_fpred);
+csvwrite('ex2/ex2_ufpred_nwreg.csv',u_fpred);
+csvwrite('ex2/ex2_config_nwreg.csv',d);
 
