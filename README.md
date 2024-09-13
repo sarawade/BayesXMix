@@ -5,6 +5,7 @@ Data generation for three examples of the paper can be found in the 'data_simula
 - Example 1: drawbacks of the joint (generative) approach
 - Example 2: drawbacks of the conditional (discriminative) approach with depedent atoms and single weights
 - Example 3: drawbacks of the conditional (discriminative) approach with depedent weights
+  
 In addition, four extra examples are explored in the Supplementary Material:
 - Example 1a: extending Example 1 with student-t errors
 - Example 1b: extending Example 1 with dependent skewed normal errors
