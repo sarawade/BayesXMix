@@ -33,7 +33,6 @@ y_grid <- seq(2.4, 5.3, .02)
 m2 <- length(y_grid)
 f_true_new <- dnorm(matrix(y_grid, nrow = m2, ncol = n_new), t(matrix(m_true_new, nrow = n_new, ncol = m2)), 0.05)
 
-
 ### LDDP model
 # Design and prediction matrices
 X <- cbind(rep(1, n),
