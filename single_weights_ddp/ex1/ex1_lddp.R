@@ -47,8 +47,6 @@ X_predict <-cbind(rep(1, n_new),
                   x_new[, 2]
                   )
 
-mcmc <- list(nburn = 5000, nsave = 5000, nskip = 1)
-
 # Data-driven prior
 fit_lm <- lm(y ~ X - 1)
 prior <- list(m0 = fit_lm$coefficients,
@@ -59,6 +57,9 @@ prior <- list(m0 = fit_lm$coefficients,
               b = (sigma(fit_lm)^2)/2,
               alpha = 1, 
               L = 20)
+
+# MCMC configuration
+mcmc <- list(nburn = 5000, nsave = 5000, nskip = 1)
 
 # Run MCMC
 set.seed(123)
