@@ -2,6 +2,10 @@ require(nor1mix)
 require(ggplot2)
 require(mcclust.ext)
 
+# Change the below to your own directory
+setwd("/Users/vandainacio/Dropbox/BNPregression/Code/single_weights_DDP")
+source("main_function_mcmc.R")
+
 # Generate data
 set.seed(1010101)
 n <- 200
