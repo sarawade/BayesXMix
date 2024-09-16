@@ -246,20 +246,20 @@ xs <- sort(x_new[ ,1], index.return = TRUE)
 inds <- xs$ix[c(seq(1, n_new, n_new/5), n_new)]
 cols <- rainbow(6)
 ggplot() +
-  geom_line(aes(x = y_grid, y = dpred_lddpbs_m[, inds[1]]), col = cols[1]) +
+  geom_line(aes(x = y_grid, y = dpred_lddp_bs_1_m[, inds[1]]), col = cols[1]) +
   geom_line(aes(x = y_grid, y = f_true_new[, inds[1]]), 
             col = cols[1], linetype = "dashed") +
-  geom_ribbon(aes(x = y_grid, ymin = dpred_lddpbs_l[, inds[1]], ymax = dpred_lddpbs_h[, inds[1]]), 
+  geom_ribbon(aes(x = y_grid, ymin = dpred_lddp_bs_1_l[, inds[1]], ymax = dpred_lddp_bs_1_h[, inds[1]]), 
               alpha = 0.2, fill = cols[1]) +
-  geom_line(aes(x = y_grid, y = dpred_lddpbs_m[, inds[3]]), col = cols[3]) +
+  geom_line(aes(x = y_grid, y = dpred_lddp_bs_1_m[, inds[3]]), col = cols[3]) +
   geom_line(aes(x = y_grid, y = f_true_new[, inds[3]]), 
             col = cols[3], linetype = "dashed") +
-  geom_ribbon(aes(x = y_grid, ymin = dpred_lddpbs_l[, inds[3]], ymax = dpred_lddpbs_h[, inds[3]]), 
+  geom_ribbon(aes(x = y_grid, ymin = dpred_lddp_bs_1_l[, inds[3]], ymax = dpred_lddp_bs_1_h[, inds[3]]), 
               alpha = 0.2, fill = cols[3]) +
- geom_line(aes(x = y_grid, y = dpred_lddpbs_m[, inds[5]]), col = cols[5]) +
+ geom_line(aes(x = y_grid, y = dpred_lddp_bs_1_m[, inds[5]]), col = cols[5]) +
   geom_line(aes(x = y_grid, y = f_true_new[, inds[5]]), 
             col = cols[5], linetype = "dashed") +
-  geom_ribbon(aes(x = y_grid, ymin = dpred_lddpbs_l[, inds[5]], ymax = dpred_lddpbs_h[, inds[5]]), 
+  geom_ribbon(aes(x = y_grid, ymin = dpred_lddp_bs_1_l[, inds[5]], ymax = dpred_lddp_bs_1_h[, inds[5]]), 
               alpha = 0.2, fill = cols[5]) +
   theme_bw() +
   ylim(0, 5) + 
