@@ -59,6 +59,7 @@ prior <- list(m0 = fit_lm$coefficients,
 mcmc <- list(nburn = 5000, nsave = 5000, nskip = 1)
 
 # Run MCMC
+set.seed(123)
 fit_lddp <- bddp(y = y,
                  X = X,
                  prior = prior, 
