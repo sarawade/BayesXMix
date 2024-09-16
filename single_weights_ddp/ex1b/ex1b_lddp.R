@@ -1,6 +1,7 @@
 require(ggplot2)
 require(mcclust.ext)
 require(sn)
+require(nor1mix)
 
 setwd("/Users/vandainacio/Dropbox/BNPregression/Code/single_weights_DDP")
 source("main_function_mcmc.R")
