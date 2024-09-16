@@ -55,7 +55,7 @@ m2=length(y_grid)
 f_true_new = 0.5*dnorm(matrix(y_grid,nrow=m2,ncol=n_new),t(matrix(sin(acos(x_new)),nrow=n_new,ncol=m2)), 0.05) + 0.5*dnorm(matrix(y_grid,nrow=m2,ncol=n_new),t(matrix(sin(acos(x_new)+pi),nrow=n_new,ncol=m2)), 0.05)
 
 # Heatmap of true density
-png("excircle_true_dens_heat",width = 500, height = 450)
+png("excircle_true_dens_heat.png",width = 500, height = 450)
 f_pred_true = data.frame(x = rep(x_new[,1], each = m2), y = rep(y_grid,n_new), density= c(f_true_new))
 ggplot(f_pred_true) +
   geom_raster(aes(x,y,fill=density),interpolate = TRUE) +

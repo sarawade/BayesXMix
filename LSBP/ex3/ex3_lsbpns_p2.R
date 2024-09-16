@@ -139,8 +139,8 @@ dev.off()
 png("ex3_lsbpns_pred_p2.png",width = 500, height = 450)
 xnew2 = 1.5
 ggplot() +
-  geom_line(aes(x = x_new[x_new[,2]==xnew2,1], y = ypred_lsbp[x_new[,2]==xnew2]), col = "black") +
-  geom_line(aes(x = x_new[x_new[,2]==xnew2,1], y = m_true_new[x_new[,2]==xnew2]), col = "red") +
+  geom_point(aes(x = x_new[x_new[,2]==xnew2,1], y = ypred_lsbp[x_new[,2]==xnew2]), col = "black") +
+  geom_point(aes(x = x_new[x_new[,2]==xnew2,1], y = m_true_new[x_new[,2]==xnew2]), col = "red") +
   geom_ribbon(aes(x = x_new[x_new[,2]==xnew2,1], ymin=lpred_lsbp[x_new[,2]==xnew2], ymax=upred_lsbp[x_new[,2]==xnew2]), alpha=0.2) +
   theme_bw() +
   labs( x = "x_1", y = "y") 

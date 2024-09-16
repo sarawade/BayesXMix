@@ -173,7 +173,8 @@ ggplot() +
   geom_line(aes(x = y_grid, y = f_true_new[,inds[5]]), col = cols[5],linetype = "dashed") +
   geom_ribbon(aes(x=y_grid, ymin=lower_Gibbs[,5], ymax=upper_Gibbs[,5]), alpha=0.2, fill = cols[5]) +
   theme_bw() +
-  labs( x = "y", y = "Density")
+  labs( x = "y", y = "Density")  +
+  xlim(2.4,4.2)
 dev.off()
 
 #empirical l2 prediction error
