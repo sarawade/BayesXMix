@@ -249,6 +249,9 @@ dpred_lddp_bs_0_m <- apply(dpred_lddp_bs_0, c(2,3), mean)
 dpred_lddp_bs_0_l <- apply(dpred_lddp_bs_0, c(2,3), quantile, prob = 0.025)
 dpred_lddp_bs_0_h <- apply(dpred_lddp_bs_0, c(2,3), quantile, prob = 0.975)
 
+# Estimated l1 distance for density
+l1_dist_lddpbs <- colSums(abs(f_true_new - dpred_lddp_bs_0_m))*(y_grid[2]-y_grid[1])
+
 xs <- sort(x_new[ ,1], index.return = TRUE) 
 inds <- xs$ix[c(seq(1, n_new, n_new/5), n_new)]
 cols <- rainbow(6)
