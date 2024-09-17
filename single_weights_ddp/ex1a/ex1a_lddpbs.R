@@ -221,7 +221,7 @@ ec_pred_lddpbs
 
 # Credible interval length for prediction
 ci_length_lddpbs <- m_pred_lddp_bs_1_h - m_pred_lddp_bs_1_l
-mean(ci_length_lddp)
+mean(ci_length_lddpbs)
 
 # Predictive densities and plot
 dpred_lddp_bs_1 <- array(0, c(mcmc$nsave, m2, n_new))
