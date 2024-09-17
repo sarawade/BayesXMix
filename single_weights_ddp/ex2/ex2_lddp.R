@@ -69,7 +69,7 @@ prior <- list(m0 = fit_lm$coefficients,
               L = 20)
 
 # MCMC configuration
-mcmc <- list(nburn = 5000, nsave = 2000, nskip = 1)
+mcmc <- list(nburn = 5000, nsave = 5000, nskip = 1)
 
 # Run MCMC
 set.seed(123)
