@@ -1,4 +1,4 @@
-This repo contains the code and data accompanying the experiements in the paper "Bayesian dependent mixtures: a predictive comparison and survey" by Wade and Inacio (2024) under revision for Statistical Science:
+This repo contains the code and data accompanying the experiements in the paper "Bayesian dependent mixtures: a predictive comparison and survey" by Wade and Inacio (2024) accepted for Statistical Science:
 https://arxiv.org/abs/2307.16298
 
 Data generation for three examples of the paper can be found in the 'data_simulation' folder:
